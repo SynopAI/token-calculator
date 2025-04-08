@@ -138,9 +138,14 @@ $(document).ready(function () {
 
     // 显示通知提示
     function showNotification(message, type = 'info') {
-        // 这里可以实现一个简单的通知组件
-        // 为简洁起见，暂时使用alert
-        alert(message);
+        // 改为使用控制台输出而不是弹窗
+        console.log(`[${type}] ${message}`);
+
+        // 如果需要可视化反馈，可以添加一个非侵入式提示
+        // 例如在界面顶部显示一个短暂的消息条
+        if (type === 'error') {
+            $('#emptyState').find('p').text(message);
+        }
     }
 
     // 显示计算结果

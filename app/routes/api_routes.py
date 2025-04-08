@@ -4,13 +4,14 @@ import tiktoken
 api = Blueprint('api', __name__)
 
 def count_tokens(text, model="gpt-3.5-turbo"):
-    """简单的token计算函数"""
+    """准确的token计算函数"""
     try:
         encoding = tiktoken.encoding_for_model(model)
         tokens = encoding.encode(text)
         return len(tokens), tokens
-    except:
-        # 如果tiktoken不支持该模型，使用简单的空格分词作为后备
+    except Exception as e:
+        print(f"Tiktoken错误: {e}")
+        # 如果tiktoken出错，使用简单的空格分词作为后备（不应该走到这里）
         return len(text.split()), None
 
 @api.route('/calculate', methods=['POST'])
@@ -25,6 +26,23 @@ def calculate_tokens():
     output_tokens = data.get('output_tokens', 0)
     exchange_rate = data.get('exchange_rate', 7.2)
     
+    # 确保text非空
+    if not text or text.strip() == "":
+        return jsonify({
+            'success': True,
+            'input_tokens': 0,
+            'tokens_detail': [],
+            'cost_estimate': {
+                'input_tokens': 0,
+                'output_tokens': output_tokens,
+                'input_cost_usd': 0,
+                'output_cost_usd': 0,
+                'total_cost_usd': 0,
+                'total_cost_cny': 0,
+                'exchange_rate': exchange_rate
+            }
+        })
+    
     # 计算tokens
     try:
         from app.config import Config
@@ -32,9 +50,13 @@ def calculate_tokens():
         
         token_count, tokens = count_tokens(text, model)
         
+        # 调试输出
+        print(f"输入文本: {text[:50]}... (长度: {len(text)})")
+        print(f"计算得到token数: {token_count}")
+        
         # 构建token详情
         tokens_detail = []
-        if tokens:
+        if tokens is not None:
             encoding = tiktoken.encoding_for_model(model)
             for i, token in enumerate(tokens):
                 try:
@@ -47,7 +69,8 @@ def calculate_tokens():
                         'text': token_text,
                         'bytes': token_bytes_hex
                     })
-                except:
+                except Exception as e:
+                    print(f"处理token {i}时出错: {e}")
                     tokens_detail.append({
                         'id': i,
                         'token': int(token),
@@ -82,6 +105,9 @@ def calculate_tokens():
         })
     
     except Exception as e:
+        import traceback
+        print(f"计算token时出错: {e}")
+        print(traceback.format_exc())
         return jsonify({'error': str(e)}), 500
 
 @api.route('/models', methods=['GET'])
