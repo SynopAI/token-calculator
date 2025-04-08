@@ -1,445 +1,1165 @@
 # LLM Token计算器 - 技术文档
 
-## 1. 技术架构概述
+## 1. 产品概述
 
-LLM Token计算器是一款基于React的单页面应用(SPA)，采用现代前端技术栈构建。应用使用Material UI作为组件库，提供一致的用户界面体验，并使用自定义的tokenizer服务计算不同语言模型的token。
+LLM Token计算器是一款专业工具，用于准确计算和可视化大型语言模型(LLM)的token消耗及相关成本。本工具旨在帮助AI开发者、产品经理和LLM使用者更有效地规划和管理API调用预算。
 
-### 1.1 核心技术栈
+## 2. 产品定位与背景
 
-- **React**: 用于构建用户界面的JavaScript库
-- **Material UI**: React组件库，提供设计良好的UI元素
-- **js-tiktoken/自定义tokenizer**: 用于计算和分析文本token
-- **Vite**: 现代前端构建工具，提供快速的开发体验
+### 2.1 背景
 
-### 1.2 系统架构
+随着ChatGPT、Claude和其它大语言模型的广泛应用，精确计算API调用成本成为开发者的迫切需求。不同模型采用不同的token计算方式和计费标准，增加了成本预估的复杂性。
 
-应用采用组件化架构，主要分为以下几个部分：
+### 2.2 目标用户
 
-1. **UI组件层**: 处理用户界面的呈现和交互
-2. **业务逻辑层**: 处理token计算、成本估算等核心功能
-3. **服务层**: 提供tokenizer和价格计算等服务
-4. **状态管理**: 使用React Hooks管理应用状态
+- AI应用开发者
+- 产品经理和项目管理人员
+- 数据科学家和研究人员
+- API服务使用者和管理者
+- 教育工作者和学生
 
-## 2. 项目结构
+### 2.3 产品愿景
 
-```txt
-token-calculator/
-├── docs/                   # 项目文档
-├── public/                 # 静态资源
-├── src/
-│   ├── components/         # UI组件
-│   │   ├── Header.jsx      # 头部导航组件
-│   │   ├── TokenInput.jsx  # 文本输入组件
-│   │   ├── ModelSelector.jsx # 模型选择组件
-│   │   ├── ResultsDisplay.jsx # 结果显示组件
-│   │   ├── TokenVisualizer.jsx # token可视化组件
-│   │   ├── AdvancedOptions.jsx # 高级选项组件
-│   │   ├── ThemeToggle.jsx # 主题切换组件
-│   │   └── Footer.jsx      # 页脚组件
-│   ├── hooks/              # 自定义React Hooks
-│   │   ├── useTheme.jsx    # 主题管理hook
-│   │   └── useTokenCalculation.jsx # token计算hook
-│   ├── services/           # 核心服务
-│   │   ├── tokenizers.jsx  # tokenizer服务
-│   │   └── pricingService.jsx # 价格计算服务
-│   ├── theme.jsx           # 主题配置
-│   ├── App.jsx             # 应用主组件
-│   ├── main.jsx           # 应用入口文件
-│   └── index.css          # 全局样式
-├── vite.config.js         # Vite配置文件
-├── package.json           # 项目依赖声明
-└── README.md              # 项目说明
+我们希望通过本工具，降低大语言模型使用者的入门门槛，提高成本透明度，并帮助用户更有效地规划和优化他们的AI模型使用策略。
+
+## 3. 技术架构
+
+### 3.1 总体架构
+
+```python
+┌─────────────────────────────────────────────────────┐
+│                   Client Browser                    │
+└─────────────────┬───────────────────────────────────┘
+                  │
+                  ▼
+┌─────────────────────────────────────────────────────┐
+│                  Web Server (Nginx)                 │
+└─────────────────┬───────────────────────────────────┘
+                  │
+                  ▼
+┌─────────────────────────────────────────────────────┐
+│              Flask Application Server               │
+│                                                     │
+│  ┌─────────────┐   ┌─────────────┐   ┌──────────┐   │
+│  │  Web Routes │   │ API Routes  │   │Tokenizers│   │
+│  └─────────────┘   └─────────────┘   └──────────┘   │
+│                                                     │
+│  ┌─────────────┐   ┌─────────────┐   ┌──────────┐   │
+│  │ Token Utils │   │Cost Calculat│   │ Config   │   │
+│  └─────────────┘   └─────────────┘   └──────────┘   │
+│                                                     │
+└─────────────────────────────────────────────────────┘
 ```
 
-## 3. 核心模块详解
+### 3.2 技术栈
 
-### 3.1 UI组件
+- **后端**：
+  - Python 3.8+
+  - Flask 2.0+
+  - Tiktoken (OpenAI tokenizer)
+  - Anthropic tokenizer (如可用)
+  - Flask-RESTful (API开发)
+  - Flask-WTF (表单验证)
 
-#### 3.1.1 TokenInput.jsx
+- **前端**：
+  - Bootstrap 5
+  - jQuery
+  - Chart.js (可视化)
+  - Highlight.js (代码高亮)
+  - D3.js (高级可视化)
 
-文本输入组件，支持用户输入文本和导入文件。
+- **开发工具**：
+  - Poetry (依赖管理)
+  - Flask-Debug (开发环境)
+  - Pytest (测试)
+  - Black & Flake8 (代码格式化)
 
-**主要功能**:
+- **部署**：
+  - Docker
+  - Nginx
+  - Gunicorn
 
-- 提供多行文本输入区
-- 支持文件上传和读取
-- 文本清空功能
+## 4. 后端实现
 
-**关键实现**:
+### 4.1 目录结构
 
-```jsx
-// 文件上传处理
-const handleFileUpload = (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = (event) => {
-    setText(event.target.result);
-  };
-  reader.readAsText(file);
-};
+```python
+token_calculator/
+├── app/
+│   ├── __init__.py
+│   ├── routes/
+│   │   ├── __init__.py
+│   │   ├── web_routes.py
+│   │   └── api_routes.py
+│   ├── static/
+│   │   ├── css/
+│   │   ├── js/
+│   │   └── img/
+│   ├── templates/
+│   │   ├── base.html
+│   │   ├── index.html
+│   │   ├── api_docs.html
+│   │   └── components/
+│   ├── tokenizers/
+│   │   ├── __init__.py
+│   │   ├── gpt_tokenizer.py
+│   │   ├── claude_tokenizer.py
+│   │   └── llama_tokenizer.py
+│   ├── utils/
+│   │   ├── __init__.py
+│   │   ├── token_calculator.py
+│   │   └── cost_estimator.py
+│   └── config.py
+├── tests/
+│   ├── __init__.py
+│   ├── test_tokenizers.py
+│   └── test_cost_estimator.py
+├── .env
+├── .env.example
+├── .gitignore
+├── docker-compose.yml
+├── Dockerfile
+├── requirements.txt
+├── pyproject.toml
+└── README.md
 ```
 
-#### 3.1.2 ModelSelector.jsx
+### 4.2 Flask应用初始化
 
-模型选择组件，支持用户选择不同的LLM模型。
+```python
+# app/__init__.py
+from flask import Flask
+from app.config import Config
 
-**主要功能**:
-
-- 展示支持的模型列表
-- 提供模型选择功能
-- 显示模型提供商信息
-
-**数据结构**:
-
-```jsx
-const models = [
-  { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo', provider: 'OpenAI' },
-  { id: 'gpt-4', name: 'GPT-4', provider: 'OpenAI' },
-  // 更多模型...
-];
+def create_app(config_class=Config):
+    app = Flask(__name__)
+    app.config.from_object(config_class)
+    
+    # 注册蓝图
+    from app.routes.web_routes import web
+    from app.routes.api_routes import api
+    
+    app.register_blueprint(web)
+    app.register_blueprint(api, url_prefix='/api')
+    
+    return app
 ```
 
-#### 3.1.3 ResultsDisplay.jsx
+### 4.3 配置管理
 
-结果显示组件，展示计算的token数量和估算成本。
+```python
+# app/config.py
+import os
+from dotenv import load_dotenv
 
-**主要功能**:
+load_dotenv()
 
-- 显示token总数
-- 计算并显示美元和人民币成本
-- 处理加载状态
-
-**关键实现**:
-
-```jsx
-// 格式化货币显示
-const formatCost = (cost) => {
-  if (cost < 0.01) {
-    return cost.toFixed(6);
-  }
-  return cost.toFixed(4);
-};
+class Config:
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'hard-to-guess-string'
+    
+    # Token算法配置
+    AVAILABLE_MODELS = {
+        'gpt-3.5-turbo': {'name': 'GPT-3.5 Turbo', 'tokenizer': 'tiktoken', 'encoding': 'cl100k_base'},
+        'gpt-4': {'name': 'GPT-4', 'tokenizer': 'tiktoken', 'encoding': 'cl100k_base'},
+        'claude-2': {'name': 'Claude 2', 'tokenizer': 'claude', 'encoding': 'claude'},
+        'llama-2': {'name': 'Llama 2', 'tokenizer': 'llama', 'encoding': 'llama'},
+    }
+    
+    # 价格配置 (输入/输出, 单位: USD/1000 tokens)
+    MODEL_PRICING = {
+        'gpt-3.5-turbo': {'input': 0.0015, 'output': 0.002},
+        'gpt-4': {'input': 0.03, 'output': 0.06},
+        'claude-2': {'input': 0.008, 'output': 0.024},
+        'llama-2': {'input': 0.0007, 'output': 0.0007},
+    }
+    
+    # 默认汇率
+    DEFAULT_EXCHANGE_RATE = 7.2  # 1 USD = 7.2 CNY
 ```
 
-#### 3.1.4 TokenVisualizer.jsx
+### 4.4 Tokenizer实现
 
-token可视化组件，展示文本如何被拆分为tokens。
+```python
+# app/tokenizers/gpt_tokenizer.py
+import tiktoken
 
-**主要功能**:
-
-- 显示token拆分结果
-- 特殊token高亮
-- token详细信息查看
-
-**关键实现**:
-
-```jsx
-// Token样式计算
-const getTokenStyle = (token) => {
-  if (token.isSpecial) {
-    return { backgroundColor: '...', color: '...' };
-  }
-  return { backgroundColor: '...', color: '...' };
-};
+class GPTTokenizer:
+    def __init__(self, model="gpt-3.5-turbo"):
+        self.model = model
+        self.encoding = tiktoken.encoding_for_model(model)
+    
+    def count_tokens(self, text):
+        """计算文本的token数"""
+        return len(self.encoding.encode(text))
+    
+    def tokenize(self, text):
+        """返回文本的token详情"""
+        tokens = self.encoding.encode(text)
+        token_bytes = [self.encoding.decode_single_token_bytes(token) for token in tokens]
+        token_text = [tb.decode('utf-8', errors='replace') for tb in token_bytes]
+        
+        result = []
+        for i, (token, text) in enumerate(zip(tokens, token_text)):
+            result.append({
+                'id': i,
+                'token': token,
+                'text': text,
+                'bytes': ' '.join(f'{b:02x}' for b in token_bytes[i])
+            })
+        
+        return result
 ```
 
-### 3.2 核心服务
+### 4.5 Token计算工具
 
-#### 3.2.1 tokenizers.jsx
+```python
+# app/utils/token_calculator.py
+from app.tokenizers import get_tokenizer
+from app.config import Config
 
-提供token计算服务，将文本解析为tokens。
-
-**主要功能**:
-
-- 文本token化处理
-- 支持不同模型的tokenizer规则
-- 计算token数量和详情
-
-**关键实现**:
-
-```jsx
-// 简化的tokenizer实现
-export const tokenizeText = async (text, model) => {
-  // 解析文本为tokens
-  // 返回token数量和详细信息
-};
+class TokenCalculator:
+    def __init__(self):
+        self.tokenizers = {}
+    
+    def get_tokenizer(self, model):
+        if model not in self.tokenizers:
+            self.tokenizers[model] = get_tokenizer(model)
+        return self.tokenizers[model]
+    
+    def calculate(self, text, model):
+        """计算给定文本的token数"""
+        tokenizer = self.get_tokenizer(model)
+        return tokenizer.count_tokens(text)
+    
+    def get_tokens_detail(self, text, model):
+        """获取文本的token详细信息"""
+        tokenizer = self.get_tokenizer(model)
+        return tokenizer.tokenize(text)
+    
+    def estimate_cost(self, input_tokens, output_tokens, model, exchange_rate=None):
+        """估算API调用成本"""
+        if exchange_rate is None:
+            exchange_rate = Config.DEFAULT_EXCHANGE_RATE
+        
+        pricing = Config.MODEL_PRICING.get(model, {'input': 0, 'output': 0})
+        
+        input_cost_usd = (input_tokens / 1000) * pricing['input']
+        output_cost_usd = (output_tokens / 1000) * pricing['output']
+        total_cost_usd = input_cost_usd + output_cost_usd
+        
+        return {
+            'input_tokens': input_tokens,
+            'output_tokens': output_tokens,
+            'input_cost_usd': input_cost_usd,
+            'output_cost_usd': output_cost_usd,
+            'total_cost_usd': total_cost_usd,
+            'total_cost_cny': total_cost_usd * exchange_rate,
+            'exchange_rate': exchange_rate
+        }
 ```
 
-#### 3.2.2 pricingService.jsx
+### 4.6 API路由
 
-提供价格计算服务，计算不同模型的API调用成本。
+```python
+# app/routes/api_routes.py
+from flask import Blueprint, request, jsonify
+from app.utils.token_calculator import TokenCalculator
 
-**主要功能**:
+api = Blueprint('api', __name__)
+calculator = TokenCalculator()
 
-- 维护不同模型的价格数据
-- 计算token对应的成本
-- 货币转换功能
+@api.route('/calculate', methods=['POST'])
+def calculate_tokens():
+    data = request.get_json()
+    
+    if not data or 'text' not in data or 'model' not in data:
+        return jsonify({'error': 'Missing required parameters'}), 400
+    
+    text = data['text']
+    model = data['model']
+    output_tokens = data.get('output_tokens', 0)
+    exchange_rate = data.get('exchange_rate', None)
+    
+    try:
+        input_tokens = calculator.calculate(text, model)
+        tokens_detail = calculator.get_tokens_detail(text, model)
+        cost_estimate = calculator.estimate_cost(
+            input_tokens, 
+            output_tokens,
+            model, 
+            exchange_rate
+        )
+        
+        return jsonify({
+            'success': True,
+            'input_tokens': input_tokens,
+            'tokens_detail': tokens_detail,
+            'cost_estimate': cost_estimate
+        })
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
-**数据结构**:
-
-```jsx
-// 模型价格配置
-const MODEL_PRICING = {
-  'gpt-3.5-turbo': {
-    input: 0.0005,
-    output: 0.0015
-  },
-  // 更多模型价格...
-};
+@api.route('/models', methods=['GET'])
+def get_models():
+    from app.config import Config
+    return jsonify({
+        'models': {k: v['name'] for k, v in Config.AVAILABLE_MODELS.items()},
+        'pricing': Config.MODEL_PRICING
+    })
 ```
 
-### 3.3 自定义Hooks
+### 4.7 Web路由
 
-#### 3.3.1 useTheme.jsx
+```python
+# app/routes/web_routes.py
+from flask import Blueprint, render_template, request
+from app.utils.token_calculator import TokenCalculator
+from app.config import Config
 
-管理应用主题状态，支持深色和浅色主题切换。
+web = Blueprint('web', __name__)
+calculator = TokenCalculator()
 
-**主要功能**:
+@web.route('/', methods=['GET', 'POST'])
+def index():
+    models = {k: v['name'] for k, v in Config.AVAILABLE_MODELS.items()}
+    pricing = Config.PRICING
+    
+    return render_template(
+        'index.html', 
+        models=models,
+        pricing=pricing,
+        default_exchange_rate=Config.DEFAULT_EXCHANGE_RATE
+    )
 
-- 读取和保存主题偏好
-- 根据系统设置提供默认主题
-- 主题状态管理和持久化
-
-**关键实现**:
-
-```jsx
-export default function useTheme() {
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    const savedTheme = localStorage.getItem('theme');
-    return savedTheme === 'dark' || 
-      (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  });
-
-  useEffect(() => {
-    localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
-  }, [isDarkMode]);
-
-  return [isDarkMode, setIsDarkMode];
-}
+@web.route('/api-docs')
+def api_docs():
+    return render_template('api_docs.html')
 ```
 
-#### 3.3.2 useTokenCalculation.jsx
+## 5. 前端实现
 
-处理token计算逻辑，提供计算结果给UI组件。
+### 5.1 基础模板
 
-**主要功能**:
+```html
+<!-- app/templates/base.html -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}LLM Token计算器{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body data-bs-theme="light">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('web.index') }}">LLM Token计算器</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('web.index') }}">首页</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('web.api_docs') }}">API文档</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <button id="theme-toggle" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-moon"></i> 切换主题
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
 
-- 监听输入文本和模型变化
-- 调用tokenizer服务计算token
-- 防抖处理，避免频繁计算
-- 提供计算结果状态
+    <main class="container py-4">
+        {% block content %}{% endblock %}
+    </main>
 
-**关键实现**:
+    <footer class="footer mt-auto py-3 bg-light">
+        <div class="container text-center">
+            <span class="text-muted">© 2024 LLM Token计算器 | 版本 1.0.0</span>
+        </div>
+    </footer>
 
-```jsx
-// 防抖计算功能
-useEffect(() => {
-  const calculateTokens = async () => {
-    // 计算token逻辑
-  };
-
-  const timeoutId = setTimeout(calculateTokens, 300); // 300ms防抖
-  return () => clearTimeout(timeoutId);
-}, [text, model]);
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
 ```
 
-## 4. 数据流与状态管理
+### 5.2 主页实现
 
-### 4.1 状态管理策略
+```html
+<!-- app/templates/index.html -->
+{% extends "base.html" %}
 
-应用使用React Hooks管理状态，主要包括:
+{% block title %}LLM Token计算器 - 准确计算GPT、Claude等模型的token{% endblock %}
 
-1. **文本输入状态**: 在App组件中维护，通过props传递
-2. **选择的模型**: 在App组件中维护，通过props传递
-3. **计算结果**: 使用useTokenCalculation钩子计算和管理
-4. **UI状态**: 如主题设置、高级选项展开状态等，在各自组件中维护
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/d3@7.8.5/dist/d3.min.css">
+{% endblock %}
 
-### 4.2 主要数据流
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="display-5">LLM Token计算器</h1>
+        <p class="lead">精确计算大语言模型的token消耗量和API调用成本</p>
+    </div>
+</div>
 
-```txt
-用户输入 -> TokenInput组件 -> App组件状态更新 -> useTokenCalculation钩子
-       -> tokenizers服务计算 -> 更新结果状态 -> ResultsDisplay & TokenVisualizer展示
+<div class="row">
+    <!-- 输入区域 -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="card-title">文本输入</h5>
+            </div>
+            <div class="card-body">
+                <form id="tokenForm">
+                    <div class="mb-3">
+                        <label for="textInput" class="form-label">输入文本</label>
+                        <textarea class="form-control" id="textInput" rows="10" placeholder="在此粘贴或输入文本..."></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="modelSelect" class="form-label">选择模型</label>
+                        <select class="form-select" id="modelSelect">
+                            {% for model_id, model_name in models.items() %}
+                                <option value="{{ model_id }}">{{ model_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="outputTokens" class="form-label">预估响应Token数</label>
+                        <input type="number" class="form-control" id="outputTokens" value="800">
+                        <div class="form-text">用于成本计算的预估输出token数量</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <button class="btn btn-primary" type="submit" id="calculateBtn">计算Token</button>
+                        <button class="btn btn-outline-secondary" type="button" id="importBtn">导入文件</button>
+                        <input type="file" id="fileInput" accept=".txt,.md,.json" style="display: none;">
+                    </div>
+                    
+                    <div class="accordion" id="advancedOptions">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#advancedSettings">
+                                    高级设置
+                                </button>
+                            </h2>
+                            <div id="advancedSettings" class="accordion-collapse collapse">
+                                <div class="accordion-body">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="inputPrice" class="form-label">输入价格($/1K tokens)</label>
+                                            <input type="number" class="form-control" id="inputPrice" step="0.0001">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="outputPrice" class="form-label">输出价格($/1K tokens)</label>
+                                            <input type="number" class="form-control" id="outputPrice" step="0.0001">
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="exchangeRate" class="form-label">汇率 (USD to CNY)</label>
+                                        <input type="number" class="form-control" id="exchangeRate" value="{{ default_exchange_rate }}" step="0.01">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 结果区域 -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="card-title">计算结果</h5>
+            </div>
+            <div class="card-body">
+                <div id="resultLoading" style="display: none;">
+                    <div class="d-flex justify-content-center my-5">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">计算中...</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="resultContent">
+                    <div class="alert alert-info" role="alert">
+                        输入文本将在此处展示计算结果
+                    </div>
+                    
+                    <div id="resultData" style="display: none;">
+                        <div class="card mb-4">
+                            <div class="card-header">Token数量</div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <div class="p-3 border bg-light rounded text-center">
+                                            <h3 id="inputTokenCount">0</h3>
+                                            <small>输入Token</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="p-3 border bg-light rounded text-center">
+                                            <h3 id="outputTokenCount">0</h3>
+                                            <small>输出Token</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="p-3 border bg-light rounded text-center">
+                                            <h3 id="totalTokenCount">0</h3>
+                                            <small>总计Token</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card mb-4">
+                            <div class="card-header">成本估算</div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>费用类型</th>
+                                                <th>USD</th>
+                                                <th>CNY</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>输入费用</td>
+                                                <td id="inputCostUSD">$0.000</td>
+                                                <td id="inputCostCNY">¥0.000</td>
+                                            </tr>
+                                            <tr>
+                                                <td>输出费用</td>
+                                                <td id="outputCostUSD">$0.000</td>
+                                                <td id="outputCostCNY">¥0.000</td>
+                                            </tr>
+                                            <tr class="table-primary">
+                                                <td><strong>总计费用</strong></td>
+                                                <td id="totalCostUSD"><strong>$0.000</strong></td>
+                                                <td id="totalCostCNY"><strong>¥0.000</strong></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <span>Token可视化</span>
+                                <div>
+                                    <button class="btn btn-sm btn-outline-primary" id="toggleVisualization">
+                                        切换视图
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div id="tokenVisualization" class="mb-2 p-3 border rounded" style="min-height: 100px; max-height: 300px; overflow: auto;">
+                                    <div class="text-center text-muted">计算后显示token可视化</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/d3@7.8.5/dist/d3.min.js"></script>
+<script src="{{ url_for('static', filename='js/token-calculator.js') }}"></script>
+{% endblock %}
 ```
 
-## 5. 关键算法实现
+### 5.3 主要JavaScript功能
 
-### 5.1 Token计算逻辑
+```javascript
+// app/static/js/token-calculator.js
+$(document).ready(function() {
+    // 初始化变量
+    let modelPricing = {};
+    let currentModel = $('#modelSelect').val();
 
-Token计算是应用的核心功能，实现方式有两种:
+    // 加载模型数据
+    $.getJSON('/api/models', function(data) {
+        modelPricing = data.pricing;
+        updatePriceInputs();
+    });
 
-1. **使用第三方库**: 如tiktoken、js-tiktoken等
-2. **简易实现**: 使用正则表达式和规则估算token
+    // 监听模型选择变化
+    $('#modelSelect').on('change', function() {
+        currentModel = $(this).val();
+        updatePriceInputs();
+    });
 
-简易实现示例:
+    // 更新价格输入框
+    function updatePriceInputs() {
+        const pricing = modelPricing[currentModel];
+        if (pricing) {
+            $('#inputPrice').val(pricing.input);
+            $('#outputPrice').val(pricing.output);
+        }
+    }
 
-```jsx
-// 使用正则表达式拆分token
-const tokenRegex = /\b\w+\b|\s+|[^\w\s]/g;
-const matches = text.match(tokenRegex) || [];
-// 处理token...
-```
+    // 表单提交
+    $('#tokenForm').on('submit', function(e) {
+        e.preventDefault();
+        calculateTokens();
+    });
 
-### 5.2 特殊字符识别
+    // 导入文件
+    $('#importBtn').on('click', function() {
+        $('#fileInput').click();
+    });
 
-识别特殊字符和非ASCII字符的Token:
+    $('#fileInput').on('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
 
-```jsx
-// 检查是否为特殊字符
-const isSpecial = /^[\p{P}\p{S}]|^\s+$/u.test(decoded) || !isPrintableASCII(decoded);
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            $('#textInput').val(e.target.result);
+        };
+        reader.readAsText(file);
+    });
 
-// 检查是否为可打印ASCII
-function isPrintableASCII(text) {
-  return /^[\x20-\x7E]*$/.test(text);
-}
-```
+    // 计算tokens
+    function calculateTokens() {
+        const text = $('#textInput').val();
+        if (!text) {
+            alert('请输入文本');
+            return;
+        }
 
-## 6. 性能优化策略
+        const model = currentModel;
+        const outputTokens = parseInt($('#outputTokens').val()) || 0;
+        const exchangeRate = parseFloat($('#exchangeRate').val()) || 7.2;
+        const customPricing = {
+            input: parseFloat($('#inputPrice').val()),
+            output: parseFloat($('#outputPrice').val())
+        };
 
-### 6.1 已实施的优化
+        // 显示加载状态
+        $('#resultLoading').show();
+        $('#resultContent').hide();
 
-1. **输入防抖**: 使用setTimeout实现300ms防抖，避免频繁计算
-2. **延迟计算**: 大文本计算前增加短暂延迟，防止UI阻塞
-3. **分批处理**: 大文本分批解析和渲染
-4. **条件渲染**: 根据数据状态条件渲染组件
-5. **持久化缓存**: 使用localStorage缓存用户偏好设置
+        // 发送API请求
+        $.ajax({
+            url: '/api/calculate',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                text: text,
+                model: model,
+                output_tokens: outputTokens,
+                exchange_rate: exchangeRate,
+                custom_pricing: customPricing
+            }),
+            success: function(response) {
+                displayResults(response, text);
+            },
+            error: function(error) {
+                console.error('计算出错:', error);
+                alert('计算出错: ' + (error.responseJSON?.error || '未知错误'));
+            },
+            complete: function() {
+                $('#resultLoading').hide();
+                $('#resultContent').show();
+            }
+        });
+    }
 
-### 6.2 潜在的进一步优化
+    // 显示计算结果
+    function displayResults(response, text) {
+        const result = response;
+        const cost = result.cost_estimate;
+        
+        // 更新Token计数
+        $('#inputTokenCount').text(result.input_tokens);
+        $('#outputTokenCount').text(cost.output_tokens);
+        $('#totalTokenCount').text(result.input_tokens + cost.output_tokens);
+        
+        // 更新成本显示
+        $('#inputCostUSD').text('$' + cost.input_cost_usd.toFixed(5));
+        $('#outputCostUSD').text('$' + cost.output_cost_usd.toFixed(5));
+        $('#totalCostUSD').text('$' + cost.total_cost_usd.toFixed(5));
+        
+        $('#inputCostCNY').text('¥' + (cost.input_cost_usd * cost.exchange_rate).toFixed(5));
+        $('#outputCostCNY').text('¥' + (cost.output_cost_usd * cost.exchange_rate).toFixed(5));
+        $('#totalCostCNY').text('¥' + cost.total_cost_cny.toFixed(5));
+        
+        // 显示结果区域
+        $('#resultData').show();
+        
+        // 渲染Token可视化
+        renderTokenVisualization(result.tokens_detail, text);
+    }
+    
+    // Token可视化
+    function renderTokenVisualization(tokens, originalText) {
+        const container = $('#tokenVisualization');
+        container.empty();
+        
+        if (!tokens || tokens.length === 0) {
+            container.html('<div class="text-center text-muted">无token数据</div>');
+            return;
+        }
+        
+        // 创建可视化元素
+        const tokenElements = tokens.map(token => {
+            const el = $('<span>')
+                .addClass('token-item')
+                .attr('data-token-id', token.id)
+                .attr('title', `Token: ${token.token}\nBytes: ${token.bytes}`)
+                .text(token.text);
+                
+            // 特殊字符高亮
+            if (token.text.trim() === '' || /[\u0000-\u001F\u007F-\u009F]/.test(token.text)) {
+                el.addClass('token-special');
+            }
+            
+            return el;
+        });
+        
+        // 添加到容器
+        container.append(tokenElements);
+        
+        // 添加交互行为
+        $('.token-item').hover(
+            function() {
+                $(this).addClass('token-hover');
+            },
+            function() {
+                $(this).removeClass('token-hover');
+            }
+        ).click(function() {
+            const tokenId = $(this).data('token-id');
+            const token = tokens[tokenId];
+            
+            alert(`Token ID: ${token.id}\nToken值: ${token.token}\n文本: "${token.text}"\n字节: ${token.bytes}`);
+        });
+    }
 
-1. **Web Worker**: 将token计算移至Web Worker中，避免主线程阻塞
-2. **虚拟列表**: 大量token展示时使用虚拟列表优化渲染
-3. **缓存计算结果**: 缓存相同文本的计算结果
-4. **延迟加载**: 非核心功能和组件的延迟加载
-
-## 7. 扩展开发指南
-
-### 7.1 添加新的模型支持
-
-要添加新的语言模型支持，需要更新以下文件:
-
-1. **ModelSelector.jsx**: 添加新模型到模型列表
-
-   ```jsx
-   const models = [
-     // 现有模型...
-     { id: 'new-model', name: 'New Model', provider: 'Provider Name' },
-   ];
-   ```
-
-2. **pricingService.jsx**: 添加新模型的价格信息
-
-   ```jsx
-   const MODEL_PRICING = {
-     // 现有模型...
-     'new-model': {
-       input: 0.001,
-       output: 0.002
-     },
-   };
-   ```
-
-3. **tokenizers.jsx**: 为新模型添加对应的tokenizer支持
-
-   ```jsx
-   const MODEL_ENCODINGS = {
-     // 现有映射...
-     'new-model': 'encoding_name',
-   };
-   ```
-
-### 7.2 自定义主题
-
-可以通过修改theme.jsx文件自定义应用主题:
-
-```jsx
-export const lightTheme = createTheme({
-  palette: {
-    primary: {
-      main: '#YOUR_COLOR_CODE',
-    },
-    // 其他颜色设置...
-  },
-  // 字体、间距等其他设置...
+    // 切换可视化视图
+    $('#toggleVisualization').on('click', function() {
+        const container = $('#tokenVisualization');
+        container.toggleClass('token-grid-view');
+    });
 });
 ```
 
-## 8. 已知问题与解决方案
+### 5.4 CSS样式
 
-### 8.1 WebAssembly兼容性问题
+```css
+/* app/static/css/styles.css */
+/* 基础样式 */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
 
-**问题**: 某些tokenizer库依赖WebAssembly，在某些环境中可能不兼容。
+main {
+    flex: 1 0 auto;
+}
 
-**解决方案**:
+/* Token可视化样式 */
+#tokenVisualization {
+    line-height: 1.7;
+    word-break: break-word;
+}
 
-1. 使用Vite插件处理WebAssembly: vite-plugin-wasm和vite-plugin-top-level-await
-2. 提供降级选项，使用纯JavaScript实现的简易tokenizer
+.token-item {
+    display: inline-block;
+    padding: 2px 4px;
+    margin: 2px;
+    border: 1px solid #dee2e6;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
 
-### 8.2 大文本性能问题
+.token-hover {
+    background-color: #e9ecef;
+}
 
-**问题**: 处理极大文本(>10万字符)时可能出现性能延迟。
+.token-special {
+    background-color: #fff3cd;
+    border-color: #ffeeba;
+}
 
-**解决方案**:
+.token-grid-view .token-item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    margin: 3px;
+    text-align: center;
+    overflow: hidden;
+}
 
-1. 实现分块处理，每次处理固定大小的文本块
-2. 添加进度指示器，提高用户体验
-3. 考虑使用Web Worker进行后台计算
+/* 深色模式 */
+[data-bs-theme="dark"] {
+    --bs-body-bg: #212529;
+    --bs-body-color: #f8f9fa;
+}
 
-## 9. 部署指南
+[data-bs-theme="dark"] .bg-light {
+    background-color: #343a40 !important;
+}
 
-### 9.1 生产构建
+[data-bs-theme="dark"] .text-muted {
+    color: #adb5bd !important;
+}
 
-```bash
-# 安装依赖
-npm install
+[data-bs-theme="dark"] .token-item {
+    border-color: #495057;
+}
 
-# 构建生产版本
-npm run build
+[data-bs-theme="dark"] .token-hover {
+    background-color: #495057;
+}
 
-# 预览生产版本
-npm run preview
+[data-bs-theme="dark"] .token-special {
+    background-color: #664d03;
+    border-color: #997404;
+}
 ```
 
-### 9.2 推荐的部署平台
+## 6. 部署指南
 
-- **Vercel**: 简单快捷，自动集成CI/CD
-- **Netlify**: 类似Vercel，提供免费套餐
-- **GitHub Pages**: 适合静态网站部署
-- **AWS S3 + CloudFront**: 企业级部署选项
+### 6.1 Docker部署
 
-### 9.3 环境要求
+```yaml
+# docker-compose.yml
+version: '3.8'
 
-- Node.js 16.0或更高版本
-- 现代浏览器支持(Chrome, Firefox, Safari, Edge的最新版本)
-
-## 10. 贡献指南
-
-### 10.1 开发环境设置
-
-```bash
-# 克隆仓库
-git clone https://github.com/yourusername/llm-token-calculator.git
-cd llm-token-calculator
-
-# 安装依赖
-npm install
-
-# 启动开发服务器
-npm run dev
+services:
+  token-calculator:
+    build: .
+    container_name: token-calculator
+    restart: always
+    environment:
+      - FLASK_APP=run.py
+      - FLASK_ENV=production
+      - SECRET_KEY=${SECRET_KEY:-default-secret-key}
+    volumes:
+      - ./logs:/app/logs
+    ports:
+      - "8000:8000"
+    command: gunicorn --bind 0.0.0.0:8000 --workers 4 --timeout 120 "app:create_app()"
 ```
 
-### 10.2 提交规范
+```dockerfile
+# Dockerfile
+FROM python:3.9-slim
 
-- 使用语义化版本控制
-- 提交信息格式: `类型(范围): 描述`，例如 `feat(tokenizer): 添加Claude模型支持`
-- 类型包括: feat, fix, docs, style, refactor, test, chore
+WORKDIR /app
 
-### 10.3 代码风格
+# 安装依赖
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-- 使用ESLint和Prettier保持代码风格一致
-- 组件使用函数式组件和Hooks
-- 文件命名采用PascalCase(组件)和camelCase(非组件)
+# 复制应用代码
+COPY . .
+
+# 创建非root用户
+RUN useradd -m appuser
+USER appuser
+
+# 运行应用
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "4", "--timeout", "120", "app:create_app()"]
+```
+
+### 6.2 使用Nginx作为反向代理
+
+```nginx
+# nginx配置
+server {
+    listen 80;
+    server_name token-calculator.example.com;
+
+    location / {
+        proxy_pass http://localhost:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location /static {
+        alias /path/to/app/static;
+        expires 30d;
+    }
+}
+```
+
+### 6.3 部署步骤
+
+1. **准备环境**
+
+   ```bash
+   git clone https://github.com/your-repo/token-calculator.git
+   cd token-calculator
+   cp .env.example .env
+   # 编辑.env文件设置必要的环境变量
+   ```
+
+2. **使用Docker部署**
+
+   ```bash
+   docker-compose up -d
+   ```
+
+3. **传统部署**
+
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # Windows: venv\Scripts\activate
+   pip install -r requirements.txt
+   
+   # 开发环境
+   flask run
+   
+   # 生产环境
+   gunicorn --bind 0.0.0.0:8000 --workers 4 "app:create_app()"
+   ```
+
+## 7. API文档
+
+### 7.1 计算Token数量
+
+**请求:**
+
+```txt
+POST /api/calculate
+Content-Type: application/json
+```
+
+**请求体:**
+
+```json
+{
+  "text": "需要计算token的文本",
+  "model": "gpt-3.5-turbo",
+  "output_tokens": 800,
+  "exchange_rate": 7.2,
+  "custom_pricing": {
+    "input": 0.0015,
+    "output": 0.002
+  }
+}
+```
+
+**响应:**
+
+```json
+{
+  "success": true,
+  "input_tokens": 42,
+  "tokens_detail": [
+    {
+      "id": 0,
+      "token": 12345,
+      "text": "需",
+      "bytes": "e9 9c 80"
+    },
+    // ...更多token
+  ],
+  "cost_estimate": {
+    "input_tokens": 42,
+    "output_tokens": 800,
+    "input_cost_usd": 0.000063,
+    "output_cost_usd": 0.0016,
+    "total_cost_usd": 0.001663,
+    "total_cost_cny": 0.01197,
+    "exchange_rate": 7.2
+  }
+}
+```
+
+### 7.2 获取模型列表
+
+**请求:**
+
+```txt
+GET /api/models
+```
+
+**响应:**
+
+```json
+{
+  "models": {
+    "gpt-3.5-turbo": "GPT-3.5 Turbo",
+    "gpt-4": "GPT-4",
+    "claude-2": "Claude 2",
+    "llama-2": "Llama 2"
+  },
+  "pricing": {
+    "gpt-3.5-turbo": {"input": 0.0015, "output": 0.002},
+    "gpt-4": {"input": 0.03, "output": 0.06},
+    "claude-2": {"input": 0.008, "output": 0.024},
+    "llama-2": {"input": 0.0007, "output": 0.0007}
+  }
+}
+```
+
+## 8. 开发者指南
+
+### 8.1 开发环境设置
+
+1. 克隆代码库
+
+   ```bash
+   git clone https://github.com/your-repo/token-calculator.git
+   cd token-calculator
+   ```
+
+2. 创建虚拟环境
+
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # Windows: venv\Scripts\activate
+   ```
+
+3. 安装依赖
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. 配置环境变量
+
+   ```bash
+   cp .env.example .env
+   # 编辑.env文件
+   ```
+
+5. 启动开发服务器
+
+   ```bash
+   flask run --debug
+   ```
+
+### 8.2 添加新的Tokenizer
+
+要添加新的模型支持，需要以下步骤：
+
+1. 在`app/tokenizers`目录下创建新的tokenizer实现：
+
+   ```python
+   # app/tokenizers/new_model_tokenizer.py
+   class NewModelTokenizer:
+       def __init__(self, model):
+           self.model = model
+           # 初始化tokenizer
+       
+       def count_tokens(self, text):
+           # 实现token计数逻辑
+           pass
+       
+       def tokenize(self, text):
+           # 实现tokenization逻辑
+           return []  # 返回token详情列表
+   ```
+
+2. 在`app/tokenizers/__init__.py`中注册新的tokenizer：
+
+   ```python
+   from .gpt_tokenizer import GPTTokenizer
+   from .claude_tokenizer import ClaudeTokenizer
+   from .new_model_tokenizer import NewModelTokenizer
+   
+   def get_tokenizer(model):
+       model_info = Config.AVAILABLE_MODELS.get(model)
+       
+       if not model_info:
+           raise ValueError(f"不支持的模型: {model}")
+       
+       tokenizer_type = model_info['tokenizer']
+       
+       if tokenizer_type == 'tiktoken':
+           return GPTTokenizer(model)
+       elif tokenizer_type == 'claude':
+           return ClaudeTokenizer(model)
+       elif tokenizer_type == 'new_model':
+           return NewModelTokenizer(model)
+       else:
+           raise ValueError(f"未知的tokenizer类型: {tokenizer_type}")
+   ```
+
+3. 在`app/config.py`中添加新模型配置：
+
+   ```python
+   AVAILABLE_MODELS = {
+       # 现有模型...
+       'new-model': {'name': 'New Model', 'tokenizer': 'new_model', 'encoding': 'new_model'},
+   }
+   
+   MODEL_PRICING = {
+       # 现有价格...
+       'new-model': {'input': 0.001, 'output': 0.001},
+   }
+   ```
+
+### 8.3 运行测试
+
+```bash
+# 运行所有测试
+pytest
+
+# 运行特定测试文件
+pytest tests/test_tokenizers.py
+
+# 运行特定测试用例
+pytest tests/test_tokenizers.py::test_gpt_tokenizer
+```
+
+### 8.4 代码规范
+
+项目使用Black进行代码格式化，使用Flake8进行代码规范检查：
+
+```bash
+# 格式化代码
+black app tests
+
+# 检查代码规范
+flake8 app tests
+```
+
+## 9. 联系与支持
+
+如有问题、建议或反馈，请通过以下方式联系我们：
+
+- GitHub Issue: [https://github.com/synopai/token-calculator/issues](https://github.com/synopai/token-calculator/issues)
+- Email: [snychng@gmail.com](mailto:snychng@gmail.com)
 
 ---
 
-© 2024 LLM Token计算器 | 技术文档版本 1.0.0
+© 2024 LLM Token计算器 | 版本 1.0.0

@@ -1,0 +1,74 @@
+/* app/static/css/styles.css */
+/* 基础样式 */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1 0 auto;
+}
+
+/* Token可视化样式 */
+#tokenVisualization {
+    line-height: 1.7;
+    word-break: break-word;
+}
+
+.token-item {
+    display: inline-block;
+    padding: 2px 4px;
+    margin: 2px;
+    border: 1px solid #dee2e6;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.token-hover {
+    background-color: #e9ecef;
+}
+
+.token-special {
+    background-color: #fff3cd;
+    border-color: #ffeeba;
+}
+
+.token-grid-view .token-item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    margin: 3px;
+    text-align: center;
+    overflow: hidden;
+}
+
+/* 深色模式 */
+[data-bs-theme="dark"] {
+    --bs-body-bg: #212529;
+    --bs-body-color: #f8f9fa;
+}
+
+[data-bs-theme="dark"] .bg-light {
+    background-color: #343a40 !important;
+}
+
+[data-bs-theme="dark"] .text-muted {
+    color: #adb5bd !important;
+}
+
+[data-bs-theme="dark"] .token-item {
+    border-color: #495057;
+}
+
+[data-bs-theme="dark"] .token-hover {
+    background-color: #495057;
+}
+
+[data-bs-theme="dark"] .token-special {
+    background-color: #664d03;
+    border-color: #997404;
+}

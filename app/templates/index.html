@@ -1,0 +1,195 @@
+<!-- app/templates/index.html -->
+{% extends "base.html" %}
+
+{% block title %}LLM Token计算器 - 准确计算GPT、Claude等模型的token{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/d3@7.8.5/dist/d3.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="display-5">LLM Token计算器</h1>
+        <p class="lead">精确计算大语言模型的token消耗量和API调用成本</p>
+    </div>
+</div>
+
+<div class="row">
+    <!-- 输入区域 -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="card-title">文本输入</h5>
+            </div>
+            <div class="card-body">
+                <form id="tokenForm">
+                    <div class="mb-3">
+                        <label for="textInput" class="form-label">输入文本</label>
+                        <textarea class="form-control" id="textInput" rows="10" placeholder="在此粘贴或输入文本..."></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="modelSelect" class="form-label">选择模型</label>
+                        <select class="form-select" id="modelSelect">
+                            {% for model_id, model_name in models.items() %}
+                            <option value="{{ model_id }}">{{ model_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="outputTokens" class="form-label">预估响应Token数</label>
+                        <input type="number" class="form-control" id="outputTokens" value="800">
+                        <div class="form-text">用于成本计算的预估输出token数量</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <button class="btn btn-primary" type="submit" id="calculateBtn">计算Token</button>
+                        <button class="btn btn-outline-secondary" type="button" id="importBtn">导入文件</button>
+                        <input type="file" id="fileInput" accept=".txt,.md,.json" style="display: none;">
+                    </div>
+
+                    <div class="accordion" id="advancedOptions">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#advancedSettings">
+                                    高级设置
+                                </button>
+                            </h2>
+                            <div id="advancedSettings" class="accordion-collapse collapse">
+                                <div class="accordion-body">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="inputPrice" class="form-label">输入价格($/1K tokens)</label>
+                                            <input type="number" class="form-control" id="inputPrice" step="0.0001">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="outputPrice" class="form-label">输出价格($/1K tokens)</label>
+                                            <input type="number" class="form-control" id="outputPrice" step="0.0001">
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="exchangeRate" class="form-label">汇率 (USD to CNY)</label>
+                                        <input type="number" class="form-control" id="exchangeRate"
+                                            value="{{ default_exchange_rate }}" step="0.01">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 结果区域 -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="card-title">计算结果</h5>
+            </div>
+            <div class="card-body">
+                <div id="resultLoading" style="display: none;">
+                    <div class="d-flex justify-content-center my-5">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">计算中...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="resultContent">
+                    <div class="alert alert-info" role="alert">
+                        输入文本将在此处展示计算结果
+                    </div>
+
+                    <div id="resultData" style="display: none;">
+                        <div class="card mb-4">
+                            <div class="card-header">Token数量</div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <div class="p-3 border bg-light rounded text-center">
+                                            <h3 id="inputTokenCount">0</h3>
+                                            <small>输入Token</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="p-3 border bg-light rounded text-center">
+                                            <h3 id="outputTokenCount">0</h3>
+                                            <small>输出Token</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="p-3 border bg-light rounded text-center">
+                                            <h3 id="totalTokenCount">0</h3>
+                                            <small>总计Token</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card mb-4">
+                            <div class="card-header">成本估算</div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>费用类型</th>
+                                                <th>USD</th>
+                                                <th>CNY</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>输入费用</td>
+                                                <td id="inputCostUSD">$0.000</td>
+                                                <td id="inputCostCNY">¥0.000</td>
+                                            </tr>
+                                            <tr>
+                                                <td>输出费用</td>
+                                                <td id="outputCostUSD">$0.000</td>
+                                                <td id="outputCostCNY">¥0.000</td>
+                                            </tr>
+                                            <tr class="table-primary">
+                                                <td><strong>总计费用</strong></td>
+                                                <td id="totalCostUSD"><strong>$0.000</strong></td>
+                                                <td id="totalCostCNY"><strong>¥0.000</strong></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <span>Token可视化</span>
+                                <div>
+                                    <button class="btn btn-sm btn-outline-primary" id="toggleVisualization">
+                                        切换视图
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div id="tokenVisualization" class="mb-2 p-3 border rounded"
+                                    style="min-height: 100px; max-height: 300px; overflow: auto;">
+                                    <div class="text-center text-muted">计算后显示token可视化</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/d3@7.8.5/dist/d3.min.js"></script>
+<script src="{{ url_for('static', filename='js/token-calculator.js') }}"></script>
+{% endblock %}

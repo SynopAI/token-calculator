@@ -1,0 +1,83 @@
+{% extends "bootstrap/base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}LLM Token计算器{% endblock %}
+
+{% block styles %}
+{{super()}}
+<style>
+    .container { max-width: 960px; }
+    .token-box {
+        padding: 10px;
+        margin: 5px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        display: inline-block;
+    }
+    .special-token { background-color: #f8d7da; }
+    .result-section {
+        margin-top: 20px;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+    .cost-display {
+        font-size: 1.2em;
+        margin: 10px 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="text-center my-4">LLM Token计算器</h1>
+    
+    <div class="row">
+        <div class="col-md-12">
+            {{ wtf.quick_form(form, button_map={'submit': 'primary'}) }}
+        </div>
+    </div>
+
+    {% if result %}
+    <div class="result-section">
+        <h3>计算结果</h3>
+        {% if result.error %}
+        <div class="alert alert-danger">{{ result.error }}</div>
+        {% else %}
+        <div class="cost-display">
+            <p><strong>Token数量:</strong> {{ result.token_count }}</p>
+            <p><strong>预估成本:</strong></p>
+            <ul>
+                <li>USD: ${{ "%.6f"|format(result.cost_usd) }}</li>
+                <li>CNY: ¥{{ "%.6f"|format(result.cost_cny) }}</li>
+            </ul>
+        </div>
+
+        <h4>Token可视化</h4>
+        <div class="token-visualization">
+            {% for token in result.tokens %}
+            <div class="token-box{% if not token.isascii() %} special-token{% endif %}">
+                {{ token }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{super()}}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var form = document.querySelector('form');
+    var submitBtn = form.querySelector('button[type="submit"]');
+    
+    form.addEventListener('submit', function() {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '计算中...';
+    });
+});
+</script>
+{% endblock %}
