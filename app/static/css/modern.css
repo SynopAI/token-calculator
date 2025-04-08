@@ -626,3 +626,71 @@ body.light-theme {
 ::-webkit-scrollbar-thumb:hover {
     background-color: var(--text-tertiary);
 }
+
+/* 改进加载状态显示，使用淡入淡出过渡 */
+.loading-overlay {
+    opacity: 0.7;
+    transition: opacity 0.3s ease;
+}
+
+/* 避免内容区域高度突变导致的跳动 */
+.result-section {
+    min-height: 400px; /* 设定一个最小高度，避免高度变化导致的页面跳动 */
+}
+
+/* 平滑过渡效果 */
+#resultData, #emptyState {
+    transition: opacity 0.3s ease;
+}
+
+/* 防止页面闪烁的CSS修复 */
+body {
+    overflow-x: hidden; /* 防止水平滚动条闪烁 */
+}
+
+.result-section {
+    position: relative;
+    min-height: 300px; /* 确保有足够的高度，防止尺寸突变 */
+}
+
+#resultData, #emptyState {
+    position: absolute;
+    width: 100%;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+.loading-overlay {
+    opacity: 0.7;
+    backdrop-filter: blur(1px);
+    transition: opacity 0.2s ease, backdrop-filter 0.2s ease;
+}
+
+/* 改善加载动画 */
+.spinner {
+    width: 24px;
+    height: 24px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    border-top-color: var(--accent);
+    animation: spin 0.8s linear infinite;
+}
+
+/* 防止表单元素状态变化导致布局跳动 */
+.input-section, 
+.result-section {
+    will-change: contents;
+    transform: translateZ(0);
+}
+
+/* 确保内容区域保持固定高度 */
+.content-layout {
+    align-items: flex-start;
+}
+
+/* 兼容多种浏览器的渲染优化 */
+.token-visualization-container {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    perspective: 1000;
+}
