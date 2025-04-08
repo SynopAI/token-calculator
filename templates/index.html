@@ -1,83 +1,227 @@
-{% extends "bootstrap/base.html" %}
-{% import "bootstrap/wtf.html" as wtf %}
+<!DOCTYPE html>
+<html lang="zh-CN">
 
-{% block title %}LLM Token计算器{% endblock %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LLM Token计算器</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
 
-{% block styles %}
-{{super()}}
-<style>
-    .container { max-width: 960px; }
-    .token-box {
-        padding: 10px;
-        margin: 5px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        display: inline-block;
-    }
-    .special-token { background-color: #f8d7da; }
-    .result-section {
-        margin-top: 20px;
-        padding: 20px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-    }
-    .cost-display {
-        font-size: 1.2em;
-        margin: 10px 0;
-    }
-</style>
-{% endblock %}
-
-{% block content %}
-<div class="container">
-    <h1 class="text-center my-4">LLM Token计算器</h1>
-    
-    <div class="row">
-        <div class="col-md-12">
-            {{ wtf.quick_form(form, button_map={'submit': 'primary'}) }}
-        </div>
-    </div>
-
-    {% if result %}
-    <div class="result-section">
-        <h3>计算结果</h3>
-        {% if result.error %}
-        <div class="alert alert-danger">{{ result.error }}</div>
-        {% else %}
-        <div class="cost-display">
-            <p><strong>Token数量:</strong> {{ result.token_count }}</p>
-            <p><strong>预估成本:</strong></p>
-            <ul>
-                <li>USD: ${{ "%.6f"|format(result.cost_usd) }}</li>
-                <li>CNY: ¥{{ "%.6f"|format(result.cost_cny) }}</li>
-            </ul>
-        </div>
-
-        <h4>Token可视化</h4>
-        <div class="token-visualization">
-            {% for token in result.tokens %}
-            <div class="token-box{% if not token.isascii() %} special-token{% endif %}">
-                {{ token }}
+<body>
+    <div class="app-container">
+        <!-- 顶部导航栏 -->
+        <header class="app-header">
+            <div class="header-content">
+                <h1>LLM Token计算器</h1>
+                <div class="header-actions">
+                    <a href="{{ url_for('api_docs') }}" class="header-link">API文档</a>
+                    <button id="theme-toggle" class="icon-button">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            <path
+                                d="M12 18C15.3137 18 18 15.3137 18 12C18 8.68629 15.3137 6 12 6C8.68629 6 6 8.68629 6 12C6 15.3137 8.68629 18 12 18Z"
+                                fill="currentColor" />
+                        </svg>
+                    </button>
+                </div>
             </div>
-            {% endfor %}
-        </div>
-        {% endif %}
-    </div>
-    {% endif %}
-</div>
-{% endblock %}
+        </header>
 
-{% block scripts %}
-{{super()}}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    var form = document.querySelector('form');
-    var submitBtn = form.querySelector('button[type="submit"]');
-    
-    form.addEventListener('submit', function() {
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '计算中...';
-    });
-});
-</script>
-{% endblock %}
+        <!-- 主内容区 -->
+        <main class="app-content">
+            <div class="content-wrapper">
+                <!-- 左侧输入区 -->
+                <div class="input-section">
+                    <div class="glass-panel">
+                        <form id="tokenForm">
+                            <div class="form-group">
+                                <label for="textInput">输入文本</label>
+                                <div class="textarea-container">
+                                    <textarea id="textInput" placeholder="在此输入或粘贴文本..."></textarea>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="modelSelect">语言模型</label>
+                                <div class="select-container">
+                                    <select id="modelSelect">
+                                        <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                                        <option value="gpt-4">GPT-4</option>
+                                        <option value="claude-2">Claude 2</option>
+                                        <option value="llama-2">Llama 2</option>
+                                    </select>
+                                    <div class="select-arrow"></div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="outputTokens">预估输出Token数</label>
+                                <input type="number" id="outputTokens" value="800" class="form-input">
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" id="calculateBtn" class="primary-button">
+                                    <span class="button-icon">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M19 5L5 19" stroke="currentColor" stroke-width="2"
+                                                stroke-linecap="round" />
+                                            <path d="M5 5L19 19" stroke="currentColor" stroke-width="2"
+                                                stroke-linecap="round" />
+                                        </svg>
+                                    </span>
+                                    计算Token
+                                </button>
+                                <button type="button" id="importBtn" class="secondary-button">
+                                    <span class="button-icon">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                d="M4 16V17C4 18.6569 5.34315 20 7 20H17C18.6569 20 20 18.6569 20 17V16"
+                                                stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                                stroke-linejoin="round" />
+                                            <path d="M12 4V16M12 16L16 12M12 16L8 12" stroke="currentColor"
+                                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg>
+                                    </span>
+                                    导入文件
+                                </button>
+                            </div>
+
+                            <input type="file" id="fileInput" accept=".txt,.md,.json" style="display: none;">
+
+                            <div class="advanced-settings">
+                                <div class="settings-header" data-bs-toggle="collapse"
+                                    data-bs-target="#advancedSettings">
+                                    <span>高级设置</span>
+                                    <svg class="chevron-icon" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                        xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M6 9L12 15L18 9" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                </div>
+
+                                <div id="advancedSettings" class="settings-content collapse">
+                                    <div class="form-row">
+                                        <div class="form-group half">
+                                            <label for="inputPrice">输入价格 ($/1K tokens)</label>
+                                            <input type="number" id="inputPrice" class="form-input" step="0.0001">
+                                        </div>
+                                        <div class="form-group half">
+                                            <label for="outputPrice">输出价格 ($/1K tokens)</label>
+                                            <input type="number" id="outputPrice" class="form-input" step="0.0001">
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="exchangeRate">汇率 (USD to CNY)</label>
+                                        <input type="number" id="exchangeRate" class="form-input" value="7.2"
+                                            step="0.01">
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- 右侧结果区 -->
+                <div class="result-section">
+                    <div id="resultLoading" class="loading-overlay" style="display: none;">
+                        <div class="spinner"></div>
+                    </div>
+
+                    <div id="resultContent">
+                        <div id="emptyState" class="empty-state">
+                            <div class="empty-icon">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <path
+                                        d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
+                                        stroke="currentColor" stroke-width="2" stroke-dasharray="2 2" />
+                                    <path d="M12 8V16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                                    <path d="M8 12H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                                </svg>
+                            </div>
+                            <p>输入文本并点击计算按钮<br>查看Token详细信息</p>
+                        </div>
+
+                        <div id="resultData" class="result-data" style="display: none;">
+                            <div class="glass-panel token-summary">
+                                <div class="token-metric">
+                                    <div class="metric-value" id="inputTokenCount">0</div>
+                                    <div class="metric-label">输入Token</div>
+                                </div>
+                                <div class="token-metric">
+                                    <div class="metric-value" id="outputTokenCount">0</div>
+                                    <div class="metric-label">输出Token</div>
+                                </div>
+                                <div class="token-metric total">
+                                    <div class="metric-value" id="totalTokenCount">0</div>
+                                    <div class="metric-label">总计Token</div>
+                                </div>
+                            </div>
+
+                            <div class="glass-panel cost-panel">
+                                <h3>成本估算</h3>
+                                <div class="cost-table">
+                                    <div class="cost-row">
+                                        <div class="cost-label">输入费用</div>
+                                        <div class="cost-value">
+                                            <span id="inputCostUSD">$0.000</span>
+                                            <span class="cost-secondary" id="inputCostCNY">¥0.000</span>
+                                        </div>
+                                    </div>
+                                    <div class="cost-row">
+                                        <div class="cost-label">输出费用</div>
+                                        <div class="cost-value">
+                                            <span id="outputCostUSD">$0.000</span>
+                                            <span class="cost-secondary" id="outputCostCNY">¥0.000</span>
+                                        </div>
+                                    </div>
+                                    <div class="cost-row total">
+                                        <div class="cost-label">总计费用</div>
+                                        <div class="cost-value">
+                                            <span id="totalCostUSD">$0.000</span>
+                                            <span class="cost-secondary" id="totalCostCNY">¥0.000</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="glass-panel token-viz-panel">
+                                <div class="panel-header">
+                                    <h3>Token可视化</h3>
+                                    <div class="view-options">
+                                        <button class="tab-button active" data-view="text">文本</button>
+                                        <button class="tab-button" data-view="ids">Token IDs</button>
+                                    </div>
+                                </div>
+
+                                <div class="token-visualization-container">
+                                    <div id="tokenVisualization" class="token-visualization"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="app-footer">
+            <div class="footer-content">
+                <span>© 2024 LLM Token计算器 | 版本 1.0.0</span>
+            </div>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7.8.5/dist/d3.min.js"></script>
+    <script src="{{ url_for('static', filename='js/token-calculator.js') }}"></script>
+</body>
+
+</html>

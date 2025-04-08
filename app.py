@@ -1,68 +1,59 @@
 from flask import Flask, render_template, request, jsonify
-from flask_bootstrap import Bootstrap
-from flask_wtf import FlaskForm
-from wtforms import TextAreaField, SelectField, SubmitField
-import tiktoken
-import json
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-secret-key-here'
-Bootstrap(app)
 
-class TokenForm(FlaskForm):
-    text = TextAreaField('输入文本')
-    model = SelectField('选择模型', choices=[
-        ('gpt-3.5-turbo', 'GPT-3.5 Turbo'),
-        ('gpt-4', 'GPT-4'),
-        ('claude-2', 'Claude 2')
-    ])
-    submit = SubmitField('计算Token')
-
-MODEL_PRICING = {
-    'gpt-3.5-turbo': {'input': 0.0005, 'output': 0.0015},
-    'gpt-4': {'input': 0.03, 'output': 0.06},
-    'claude-2': {'input': 0.008, 'output': 0.024}
-}
-
-def calculate_tokens(text, model_name):
-    try:
-        encoding = tiktoken.encoding_for_model(model_name)
-        tokens = encoding.encode(text)
-        token_count = len(tokens)
-        
-        # 计算成本
-        cost_usd = token_count * MODEL_PRICING[model_name]['input']
-        cost_cny = cost_usd * 7.2  # 假设汇率1:7.2
-        
-        return {
-            'token_count': token_count,
-            'cost_usd': cost_usd,
-            'cost_cny': cost_cny,
-            'tokens': [str(t) for t in tokens]
-        }
-    except Exception as e:
-        return {'error': str(e)}
-
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/')
 def index():
-    form = TokenForm()
-    result = None
-    
-    if form.validate_on_submit():
-        text = form.text.data
-        model = form.model.data
-        result = calculate_tokens(text, model)
-    
-    return render_template('index.html', form=form, result=result)
+    return render_template('index.html')
 
 @app.route('/api/calculate', methods=['POST'])
-def api_calculate():
+def calculate():
+    # 模拟API响应
     data = request.get_json()
     text = data.get('text', '')
-    model = data.get('model', 'gpt-3.5-turbo')
+    tokens = len(text.split())  # 简单示例
     
-    result = calculate_tokens(text, model)
-    return jsonify(result)
+    response = {
+        "success": True,
+        "input_tokens": tokens,
+        "tokens_detail": [
+            {"id": i, "token": i+1000, "text": word, "bytes": "00 00"} 
+            for i, word in enumerate(text.split())
+        ],
+        "cost_estimate": {
+            "input_tokens": tokens,
+            "output_tokens": 800,
+            "input_cost_usd": tokens * 0.0015 / 1000,
+            "output_cost_usd": 800 * 0.002 / 1000,
+            "total_cost_usd": (tokens * 0.0015 + 800 * 0.002) / 1000,
+            "total_cost_cny": (tokens * 0.0015 + 800 * 0.002) / 1000 * 7.2,
+            "exchange_rate": 7.2
+        }
+    }
+    return jsonify(response)
+
+@app.route('/api/models', methods=['GET'])
+def get_models():
+    return jsonify({
+        'models': {
+            'gpt-3.5-turbo': 'GPT-3.5 Turbo',
+            'gpt-4': 'GPT-4',
+            'claude-2': 'Claude 2',
+            'llama-2': 'Llama 2'
+        },
+        'pricing': {
+            'gpt-3.5-turbo': {'input': 0.0015, 'output': 0.002},
+            'gpt-4': {'input': 0.03, 'output': 0.06},
+            'claude-2': {'input': 0.008, 'output': 0.024},
+            'llama-2': {'input': 0.0007, 'output': 0.0007}
+        }
+    })
+
+@app.route('/api-docs')
+def api_docs():
+    return render_template('api_docs.html')
 
 if __name__ == '__main__':
+    app.config['TEMPLATES_AUTO_RELOAD'] = True
+    app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0  # 禁用静态文件缓存
     app.run(debug=True)

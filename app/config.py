@@ -1,8 +1,11 @@
-# app/config.py
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+# 尝试加载.env文件，如果存在的话
+try:
+    load_dotenv()
+except:
+    pass
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'hard-to-guess-string'
@@ -24,4 +27,4 @@ class Config:
     }
     
     # 默认汇率
-    DEFAULT_EXCHANGE_RATE = 7.3  # 1 USD = 7.3 CNY
+    DEFAULT_EXCHANGE_RATE = 7.2  # 1 USD = 7.2 CNY

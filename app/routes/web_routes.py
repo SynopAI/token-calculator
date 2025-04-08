@@ -1,15 +1,12 @@
-# app/routes/web_routes.py
-from flask import Blueprint, render_template, request
-from app.utils.token_calculator import TokenCalculator
+from flask import Blueprint, render_template
 from app.config import Config
 
 web = Blueprint('web', __name__)
-calculator = TokenCalculator()
 
-@web.route('/', methods=['GET', 'POST'])
+@web.route('/')
 def index():
     models = {k: v['name'] for k, v in Config.AVAILABLE_MODELS.items()}
-    pricing = Config.PRICING
+    pricing = Config.MODEL_PRICING
     
     return render_template(
         'index.html', 
