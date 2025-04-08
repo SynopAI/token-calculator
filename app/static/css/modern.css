@@ -67,26 +67,352 @@ body {
     padding: 0 24px;
 }
 
-/* 顶部导航栏 */
+/* 创新顶部导航栏设计 - 支持主题切换 */
 .app-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    height: 60px;
-    padding: 0 var(--space-md);
+    height: 72px;
+    padding: 0 var(--space-xl);
     position: sticky;
     top: 0;
     z-index: 100;
-    background-color: var(--bg-main);
+    /* 使用CSS变量替代硬编码的颜色值 */
+    background: linear-gradient(125deg, var(--bg-header-start, #141414), var(--bg-header-end, #1a1a1a));
+    border-bottom: 1px solid var(--header-border, rgba(255, 255, 255, 0.05));
+    box-shadow: var(--header-shadow, 0 4px 20px rgba(0, 0, 0, 0.3));
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    margin: 0 var(--space-sm) var(--space-lg) var(--space-sm);
+    transition: all 0.3s ease;
+}
+
+/* 品牌标识区域 */
+.app-header .brand-container {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
 }
 
 .app-header h1 {
-    font-size: 24px;
-    font-weight: 600;
-    background: linear-gradient(135deg, var(--accent), #9333ea);
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    position: relative;
+    padding-left: var(--space-sm);
+    background: linear-gradient(135deg, var(--accent), var(--accent-gradient-mid, #9333ea) 70%, var(--accent-gradient-end, #3b82f6));
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+    text-shadow: var(--text-shadow, 0 2px 10px rgba(240, 83, 119, 0.2));
+    transition: all 0.3s ease;
+}
+
+/* 品牌图标 */
+.brand-icon {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-gradient-mid, #9333ea));
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--icon-shadow, 0 3px 10px rgba(240, 83, 119, 0.3));
+    position: relative;
+    overflow: hidden;
+}
+
+.brand-icon::before {
+    content: "T";
+    color: var(--icon-text, rgba(255, 255, 255, 0.95));
+    font-weight: 700;
+    font-size: 20px;
+}
+
+/* 右侧操作区域 */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    background: var(--header-actions-bg, rgba(46, 46, 46, 0.4));
+    border-radius: 50px;
+    padding: 6px 8px;
+    border: 1px solid var(--header-actions-border, rgba(255, 255, 255, 0.05));
+}
+
+.header-link {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 8px 16px;
+    border-radius: 50px;
+    transition: all 0.25s ease;
+    position: relative;
+    z-index: 1;
+}
+
+.header-link:hover {
+    color: var(--text-primary);
+}
+
+.header-link:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-soft), transparent);
+    border-radius: 50px;
+    z-index: -1;
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.header-link:hover:before {
+    width: 100%;
+    opacity: 1;
+}
+
+.header-link.active {
+    background: linear-gradient(90deg, var(--accent), var(--accent-hover));
+    color: white;
+    box-shadow: 0 3px 8px var(--accent-shadow, rgba(240, 83, 119, 0.3));
+}
+
+/* 主题切换按钮 */
+.icon-button {
+    background-color: transparent;
+    border: none;
+    color: var(--text-secondary);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.icon-button:hover {
+    color: var(--text-primary);
+    transform: translateY(-2px);
+}
+
+.icon-button:before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, var(--accent-soft), transparent 70%);
+    opacity: 0;
+    transition: all 0.3s ease;
+    transform: scale(0.5);
+}
+
+.icon-button:hover:before {
+    opacity: 0.8;
+    transform: scale(1.2);
+}
+
+.edit-button {
+    background: linear-gradient(135deg, var(--edit-btn-start, #3b82f6), var(--edit-btn-end, #1d4ed8));
+    border: none;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    font-size: 14px;
+    box-shadow: var(--edit-btn-shadow, 0 3px 10px rgba(59, 130, 246, 0.3));
+}
+
+.edit-button:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--edit-btn-hover-shadow, 0 6px 15px rgba(59, 130, 246, 0.4));
+}
+
+/* 顶部指标卡片 */
+.header-metrics {
+    display: flex;
+    gap: 2px;
+    margin-top: -8px;
+    margin-bottom: 16px;
+    padding: 0 var(--space-md);
+}
+
+.header-metric {
+    flex: 1;
+    background: linear-gradient(160deg, var(--metric-bg-start, rgba(46, 46, 46, 0.5)), var(--metric-bg-end, rgba(30, 30, 30, 0.5)));
+    border-radius: 0 0 var(--radius-md) var(--radius-md);
+    padding: var(--space-sm) var(--space-md);
+    text-align: center;
+    border-top: 2px solid transparent;
+    box-shadow: var(--metric-shadow, 0 4px 12px rgba(0, 0, 0, 0.15));
+    transition: all 0.3s ease;
+}
+
+.header-metric:hover {
+    transform: translateY(2px);
+    border-top-color: var(--accent);
+}
+
+.header-metric-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.header-metric-label {
+    font-size: 12px;
+    color: var(--text-tertiary);
+}
+
+/* 浅色主题变量覆盖 */
+body.light-theme {
+    --bg-main: #f5f5f7;
+    --bg-card: #ffffff;
+    --bg-input: #f0f0f5;
+    --bg-hover: #e5e5eb;
+    --border: #e0e0e5;
+    --text-primary: rgba(0, 0, 0, 0.9);
+    --text-secondary: rgba(0, 0, 0, 0.65);
+    --text-tertiary: rgba(0, 0, 0, 0.45);
+    
+    /* 顶部导航栏特定的浅色主题变量 */
+    --bg-header-start: #ffffff;
+    --bg-header-end: #f5f5f7;
+    --header-border: rgba(0, 0, 0, 0.08);
+    --header-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    --text-shadow: 0 2px 10px rgba(240, 83, 119, 0.1);
+    --icon-shadow: 0 3px 10px rgba(240, 83, 119, 0.2);
+    --icon-text: rgba(255, 255, 255, 0.95);
+    --header-actions-bg: rgba(240, 240, 245, 0.8);
+    --header-actions-border: rgba(0, 0, 0, 0.08);
+    --accent-shadow: rgba(240, 83, 119, 0.2);
+    --edit-btn-start: #4f86f7;
+    --edit-btn-end: #3a75e6;
+    --edit-btn-shadow: 0 3px 10px rgba(59, 130, 246, 0.2);
+    --edit-btn-hover-shadow: 0 6px 15px rgba(59, 130, 246, 0.3);
+    --metric-bg-start: rgba(250, 250, 252, 0.9);
+    --metric-bg-end: rgba(240, 240, 245, 0.9);
+    --metric-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .app-header {
+        padding: 0 var(--space-md);
+        height: 60px;
+    }
+    
+    .app-header h1 {
+        font-size: 20px;
+    }
+    
+    .brand-icon {
+        width: 30px;
+        height: 30px;
+    }
+    
+    .header-actions {
+        gap: var(--space-xs);
+        padding: 4px;
+    }
+    
+    .header-link {
+        padding: 6px 12px;
+        font-size: 13px;
+    }
+    
+    .icon-button {
+        width: 34px;
+        height: 34px;
+    }
+}
+
+/* 添加到HTML中的编辑按钮 */
+.edit-button {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    border: none;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    font-size: 14px;
+    box-shadow: 0 3px 10px rgba(59, 130, 246, 0.3);
+}
+
+.edit-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(59, 130, 246, 0.4);
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .app-header {
+        padding: 0 var(--space-md);
+        height: 60px;
+    }
+    
+    .app-header h1 {
+        font-size: 20px;
+    }
+    
+    .brand-icon {
+        width: 30px;
+        height: 30px;
+    }
+    
+    .header-actions {
+        gap: var(--space-xs);
+        padding: 4px;
+    }
+    
+    .header-link {
+        padding: 6px 12px;
+        font-size: 13px;
+    }
+    
+    .icon-button {
+        width: 34px;
+        height: 34px;
+    }
+}
+
+/* 动画效果 */
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-5px);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 0.8;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.05);
+    }
 }
 
 /* 增加表单元素大小 */
