@@ -91,11 +91,14 @@ $(document).ready(function () {
         }
     });
 
-    // 计算tokens
+    // 计算tokens函数
     function calculateTokens() {
         const text = $('#textInput').val();
         if (!text || text.trim() === '') {
-            showNotification('请输入文本', 'error');
+            // 修改这一行，替换弹窗提示
+            // showNotification('请输入文本', 'error');
+            $('#resultLoading').hide();
+            $('#emptyState').show();
             return;
         }
 
@@ -220,7 +223,7 @@ $(document).ready(function () {
             container.append(el);
         });
 
-        // 添加交互行为
+        // 在renderTextView函数中
         $('.token-item').hover(
             function () {
                 $(this).css('transform', 'translateY(-2px)');
@@ -234,19 +237,34 @@ $(document).ready(function () {
             const tokenId = $(this).data('token-id');
             const token = tokens[tokenId];
 
-            // 创建弹窗显示token详情
-            const detailHTML = `
-                <div class="token-detail-popup">
-                    <div class="detail-row"><span>Token ID:</span> <strong>${token.id}</strong></div>
-                    <div class="detail-row"><span>Token值:</span> <strong>${token.token}</strong></div>
-                    <div class="detail-row"><span>文本:</span> <strong>"${escapeHtml(token.text)}"</strong></div>
-                    <div class="detail-row"><span>字节:</span> <strong>${token.bytes}</strong></div>
-                </div>
-            `;
+            // 替换弹窗为更优雅的方式
+            // alert(`Token ID: ${token.id}\nToken值: ${token.token}\n文本: "${token.text}"\n字节: ${token.bytes}`);
 
-            // 显示详情（此处可以改为更优雅的弹窗）
-            alert(`Token ID: ${token.id}\nToken值: ${token.token}\n文本: "${token.text}"\n字节: ${token.bytes}`);
+            // 可以在页面上显示详情，例如在一个专门的区域
+            displayTokenDetail(token);
         });
+
+        // 添加新函数显示token详情
+        function displayTokenDetail(token) {
+            // 如果还没有详情面板，创建一个
+            if ($('#tokenDetailPanel').length === 0) {
+                const detailPanel = $('<div id="tokenDetailPanel" class="token-detail-panel"></div>');
+                $('.token-visualization-container').append(detailPanel);
+            }
+
+            // 更新详情内容
+            const html = `
+        <div class="token-detail-header">Token详情</div>
+        <div class="token-detail-content">
+            <div class="detail-row"><span>ID:</span> <strong>${token.id}</strong></div>
+            <div class="detail-row"><span>值:</span> <strong>${token.token}</strong></div>
+            <div class="detail-row"><span>文本:</span> <strong>"${escapeHtml(token.text)}"</strong></div>
+            <div class="detail-row"><span>字节:</span> <strong>${token.bytes}</strong></div>
+        </div>
+    `;
+
+            $('#tokenDetailPanel').html(html).show();
+        }
     }
 
     // Token IDs视图渲染
@@ -364,5 +382,8 @@ $(document).ready(function () {
             root.style.setProperty('--text-secondary', 'rgba(255, 255, 255, 0.65)');
             root.style.setProperty('--text-tertiary', 'rgba(255, 255, 255, 0.45)');
         }
+    });
+    $('#textInput').on('input', function() {
+        calculateTokens();
     });
 });

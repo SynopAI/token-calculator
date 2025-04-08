@@ -617,3 +617,37 @@ select:focus {
 ::-webkit-scrollbar-thumb:hover {
     background-color: rgba(140, 140, 140, 0.7);
 }
+
+/* Token详情面板样式 */
+.token-detail-panel {
+    position: relative;
+    margin-top: 12px;
+    padding: 12px;
+    background-color: rgba(40, 40, 40, 0.7);
+    border: 1px solid var(--border);
+    border-radius: var(--border-radius-small);
+    font-size: 14px;
+    display: none;
+}
+
+.token-detail-header {
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+    font-size: 15px;
+}
+
+.token-detail-content {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+}
+
+.detail-row span {
+    color: var(--text-secondary);
+}
