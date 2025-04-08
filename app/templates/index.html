@@ -5,10 +5,9 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LLM Token计算器</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-    <!-- 使用绝对路径引用CSS文件 -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modern.css') }}">
 </head>
 
@@ -33,6 +32,7 @@
         </header>
 
         <!-- 主内容区 -->
+        <!-- 替换整个content-layout部分 -->
         <main class="app-content">
             <div class="content-layout">
                 <!-- 左侧输入区 -->
@@ -49,7 +49,7 @@
                         </div>
                     </div>
 
-                    <!-- 模型选择卡片 -->
+                    <!-- 模型选择与计算按钮 -->
                     <div class="card">
                         <div class="card-body">
                             <div class="form-row">
@@ -71,7 +71,6 @@
                                 </div>
                             </div>
 
-                            <!-- 找到 action-buttons 部分并修改成这样 -->
                             <div class="action-buttons">
                                 <button type="button" id="calculateBtn" class="primary-button">
                                     计算Token
@@ -84,7 +83,7 @@
                         </div>
                     </div>
 
-                    <!-- 价格设置卡片 -->
+                    <!-- 高级设置卡片 -->
                     <div class="card collapsible-card">
                         <div class="card-header clickable" data-target="pricingSettings">
                             <h2>高级设置</h2>
@@ -126,7 +125,7 @@
                     <div id="resultContent">
                         <!-- 空状态显示 -->
                         <div id="emptyState" class="empty-state">
-                            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M12 5v14M5 12h14"></path>
                             </svg>

@@ -1,18 +1,18 @@
 :root {
-    /* 暗色主题颜色 */
-    --bg-main: #0e0e10;
-    --bg-card: #1a1a1d;
-    --bg-input: #27272a;
-    --bg-hover: #313135;
-    --border: #333336;
+    /* 暗色主题颜色 - 更鲜明的色调 */
+    --bg-main: #121212;
+    --bg-card: #1e1e1e;
+    --bg-input: #2a2a2a;
+    --bg-hover: #333333;
+    --border: #3a3a3a;
     --text-primary: rgba(255, 255, 255, 0.95);
     --text-secondary: rgba(255, 255, 255, 0.65);
     --text-tertiary: rgba(255, 255, 255, 0.45);
 
-    /* 强调色 */
-    --accent: #f354a5;
-    --accent-hover: #f46ab3;
-    --accent-soft: rgba(243, 84, 165, 0.15);
+    /* 更鲜明的强调色 */
+    --accent: #f05377;
+    --accent-hover: #f37693;
+    --accent-soft: rgba(240, 83, 119, 0.15);
 
     /* 其他颜色 */
     --success: #10b981;
@@ -62,9 +62,9 @@ body {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
-    max-width: 1440px;
+    max-width: 1600px;
     margin: 0 auto;
-    padding: 0 var(--space-md);
+    padding: 0 24px;
 }
 
 /* 顶部导航栏 */
@@ -81,7 +81,7 @@ body {
 }
 
 .app-header h1 {
-    font-size: 20px;
+    font-size: 24px;
     font-weight: 600;
     background: linear-gradient(135deg, var(--accent), #9333ea);
     -webkit-background-clip: text;
@@ -89,6 +89,85 @@ body {
     color: transparent;
 }
 
+/* 增加表单元素大小 */
+.form-input,
+select,
+textarea {
+    padding: 10px 16px; /* 增加内边距 */
+    font-size: 16px; /* 增加字体大小 */
+}
+
+.textarea-container textarea {
+    height: 240px; /* 增加文本区域高度 */
+}
+
+/* 增加按钮大小 */
+.primary-button,
+.secondary-button {
+    padding: 10px 24px; /* 增加内边距 */
+    font-size: 16px; /* 增加字体大小 */
+    border-radius: 8px; /* 稍微调整圆角 */
+}
+
+/* 调整卡片样式 */
+.card {
+    border-radius: 12px; /* 稍微增加圆角 */
+    margin-bottom: 24px; /* 增加底部边距 */
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1); /* 增强阴影 */
+}
+
+.card-body {
+    padding: 24px; /* 增加内边距 */
+}
+
+.card-header {
+    padding: 16px 24px; /* 增加内边距 */
+}
+
+/* 增加Token指标大小 */
+.metric-value {
+    font-size: 40px; /* 增大指标值字体 */
+}
+
+.metric-label {
+    font-size: 16px; /* 增大指标标签字体 */
+}
+
+.token-visualization {
+    font-size: 16px; /* 增大Token可视化字体 */
+    line-height: 2; /* 增加行高 */
+}
+
+/* 调整Token元素大小 */
+.token-item {
+    padding: 3px 6px; /* 增加内边距 */
+    margin: 3px; /* 增加外边距 */
+    border-radius: 5px; /* 增加圆角 */
+}
+
+/* 调整成本表格 */
+.cost-row {
+    padding: 12px 0; /* 增加行间距 */
+    font-size: 16px; /* 增加字体大小 */
+}
+
+/* 响应式调整 */
+@media (max-width: 1200px) {
+    .content-layout {
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+    }
+}
+
+@media (max-width: 992px) {
+    .content-layout {
+        grid-template-columns: 1fr;
+    }
+    
+    .app-container {
+        padding: 0 16px;
+    }
+}
 .header-actions {
     display: flex;
     align-items: center;
@@ -138,7 +217,8 @@ body {
 .content-layout {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: var(--space-lg);
+    gap: 32px; /* 增加间距 */
+    padding: 20px 0; /* 添加上下内边距 */
 }
 
 /* 卡片样式 */
@@ -578,7 +658,7 @@ textarea:focus {
 .app-footer {
     padding: var(--space-md);
     text-align: center;
-    font-size: 12px;
+    font-size: 16px;
     color: var(--text-tertiary);
     border-top: 1px solid var(--border);
 }
@@ -627,17 +707,6 @@ body.light-theme {
     background-color: var(--text-tertiary);
 }
 
-/* 改进加载状态显示，使用淡入淡出过渡 */
-.loading-overlay {
-    opacity: 0.7;
-    transition: opacity 0.3s ease;
-}
-
-/* 避免内容区域高度突变导致的跳动 */
-.result-section {
-    min-height: 400px; /* 设定一个最小高度，避免高度变化导致的页面跳动 */
-}
-
 /* 平滑过渡效果 */
 #resultData, #emptyState {
     transition: opacity 0.3s ease;
@@ -658,12 +727,6 @@ body {
     width: 100%;
     opacity: 1;
     transition: opacity 0.3s ease;
-}
-
-.loading-overlay {
-    opacity: 0.7;
-    backdrop-filter: blur(1px);
-    transition: opacity 0.2s ease, backdrop-filter 0.2s ease;
 }
 
 /* 改善加载动画 */
@@ -693,4 +756,32 @@ body {
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
     perspective: 1000;
+}
+
+/* 为输入框添加更明显的焦点状态 */
+.form-input:focus, 
+.textarea-container:focus-within, 
+.select-container:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+/* 更明显的按钮样式 */
+.primary-button {
+    background-color: var(--accent);
+    color: white;
+    border: none;
+    transform: translateY(0);
+    transition: all 0.3s ease;
+}
+
+.primary-button:hover {
+    background-color: var(--accent-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(240, 83, 119, 0.3);
+}
+
+/* 更明显的指标卡样式 */
+.metric.primary {
+    background: linear-gradient(135deg, var(--accent), #8a2be2);
 }
