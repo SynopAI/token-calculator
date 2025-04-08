@@ -3,11 +3,12 @@ from app.config import Config
 
 def create_app(config_class=Config):
     # 明确指定静态文件夹和模板文件夹的路径
-    app = Flask(__name__,
+    app = Flask(__name__, 
                 static_folder='static',  # 相对于app包的路径
                 template_folder='templates')  # 相对于app包的路径
     
     app.config.from_object(config_class)
+    app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0  # 禁用静态文件缓存，开发时有用
     
     # 注册蓝图
     from app.routes.web_routes import web

@@ -1,0 +1,628 @@
+:root {
+    /* 暗色主题颜色 */
+    --bg-main: #0e0e10;
+    --bg-card: #1a1a1d;
+    --bg-input: #27272a;
+    --bg-hover: #313135;
+    --border: #333336;
+    --text-primary: rgba(255, 255, 255, 0.95);
+    --text-secondary: rgba(255, 255, 255, 0.65);
+    --text-tertiary: rgba(255, 255, 255, 0.45);
+
+    /* 强调色 */
+    --accent: #f354a5;
+    --accent-hover: #f46ab3;
+    --accent-soft: rgba(243, 84, 165, 0.15);
+
+    /* 其他颜色 */
+    --success: #10b981;
+    --warning: #f59e0b;
+    --error: #ef4444;
+    --info: #3b82f6;
+
+    /* 尺寸和间距 */
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --space-xl: 32px;
+
+    /* 阴影 */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+
+    /* 动画 */
+    --transition: 0.2s ease;
+}
+
+/* 基础样式 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    line-height: 1.5;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.app-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 0 var(--space-md);
+}
+
+/* 顶部导航栏 */
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 60px;
+    padding: 0 var(--space-md);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background-color: var(--bg-main);
+}
+
+.app-header h1 {
+    font-size: 20px;
+    font-weight: 600;
+    background: linear-gradient(135deg, var(--accent), #9333ea);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.header-link {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+}
+
+.header-link:hover {
+    color: var(--text-primary);
+    background-color: var(--bg-hover);
+}
+
+.icon-button {
+    background-color: transparent;
+    border: none;
+    color: var(--text-secondary);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.icon-button:hover {
+    color: var(--text-primary);
+    background-color: var(--bg-hover);
+}
+
+/* 主内容区布局 */
+.app-content {
+    flex: 1;
+    padding: var(--space-md) 0 var(--space-xl);
+}
+
+.content-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-lg);
+}
+
+/* 卡片样式 */
+.card {
+    background-color: var(--bg-card);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-bottom: var(--space-lg);
+}
+
+.card-header {
+    padding: var(--space-md) var(--space-lg);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-header h2 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.card-body {
+    padding: var(--space-lg);
+}
+
+/* 可折叠卡片 */
+.collapsible-card .card-header.clickable {
+    cursor: pointer;
+}
+
+.collapsible-card .card-header .chevron-icon {
+    transition: transform var(--transition);
+}
+
+.collapsible-card.collapsed .card-header .chevron-icon {
+    transform: rotate(-180deg);
+}
+
+.collapsible-card.collapsed .card-body {
+    display: none;
+}
+
+/* 表单元素 */
+.form-row {
+    display: flex;
+    gap: var(--space-md);
+    margin-bottom: var(--space-md);
+}
+
+.form-row:last-child {
+    margin-bottom: 0;
+}
+
+.form-group {
+    flex: 1;
+}
+
+label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-xs);
+}
+
+.form-input,
+.select-container {
+    width: 100%;
+    background-color: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    transition: var(--transition);
+}
+
+.form-input {
+    padding: var(--space-sm) var(--space-md);
+    color: var(--text-primary);
+    font-size: 15px;
+    font-family: inherit;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.select-container {
+    position: relative;
+}
+
+select {
+    width: 100%;
+    padding: var(--space-sm) var(--space-md);
+    background-color: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-size: 15px;
+    appearance: none;
+    z-index: 1;
+    position: relative;
+    cursor: pointer;
+}
+
+select:focus {
+    outline: none;
+}
+
+.select-container::after {
+    content: "";
+    position: absolute;
+    right: var(--space-md);
+    top: 50%;
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid var(--text-tertiary);
+    border-bottom: 2px solid var(--text-tertiary);
+    transform: translateY(-70%) rotate(45deg);
+    pointer-events: none;
+}
+
+/* 文本区域 */
+.textarea-container {
+    width: 100%;
+    background-color: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    transition: var(--transition);
+}
+
+textarea {
+    width: 100%;
+    height: 200px;
+    padding: var(--space-md);
+    background-color: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-size: 15px;
+    font-family: inherit;
+    resize: vertical;
+}
+
+textarea:focus {
+    outline: none;
+}
+
+.textarea-container:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+/* 按钮样式 */
+.action-buttons {
+    display: flex;
+    gap: var(--space-sm);
+    margin-top: var(--space-lg);
+}
+
+.primary-button,
+.secondary-button {
+    padding: var(--space-sm) var(--space-lg);
+    border-radius: var(--radius-md);
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+}
+
+.primary-button {
+    background-color: var(--accent);
+    color: white;
+    border: none;
+}
+
+.primary-button:hover {
+    background-color: var(--accent-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.secondary-button {
+    background-color: var(--bg-input);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+}
+
+.secondary-button:hover {
+    background-color: var(--bg-hover);
+    color: var(--text-primary);
+    transform: translateY(-1px);
+}
+
+/* Token统计指标 */
+.token-metrics-card {
+    padding: var(--space-md);
+}
+
+.metric-group {
+    display: flex;
+    gap: var(--space-sm);
+}
+
+.metric {
+    flex: 1;
+    padding: var(--space-lg) var(--space-md);
+    background-color: var(--bg-input);
+    border-radius: var(--radius-md);
+    text-align: center;
+    transition: var(--transition);
+}
+
+.metric:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.metric.primary {
+    background: linear-gradient(135deg, var(--accent), #9333ea);
+}
+
+.metric-value {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: var(--space-xs);
+}
+
+.metric-label {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.metric.primary .metric-value,
+.metric.primary .metric-label {
+    color: white;
+}
+
+/* 成本表格 */
+.cost-table {
+    width: 100%;
+}
+
+.cost-row {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--space-sm) 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.cost-row:last-child {
+    border-bottom: none;
+}
+
+.cost-row.total {
+    padding-top: var(--space-md);
+    margin-top: var(--space-xs);
+    border-top: 1px solid var(--border);
+    font-weight: 600;
+}
+
+.cost-label {
+    color: var(--text-secondary);
+}
+
+.cost-value {
+    text-align: right;
+}
+
+.cost-secondary {
+    margin-left: var(--space-sm);
+    font-size: 14px;
+    color: var(--text-tertiary);
+}
+
+/* 标签页 */
+.card-header.with-tabs {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tab-buttons {
+    display: flex;
+    background-color: var(--bg-input);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.tab-button {
+    padding: var(--space-xs) var(--space-md);
+    border: none;
+    background-color: transparent;
+    color: var(--text-secondary);
+    font-size: 14px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.tab-button.active {
+    background-color: var(--accent);
+    color: white;
+}
+
+/* Token可视化 */
+.token-visualization-container {
+    background-color: var(--bg-input);
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.token-visualization {
+    line-height: 1.8;
+}
+
+.token-item {
+    display: inline-block;
+    padding: 2px 4px;
+    margin: 2px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: var(--transition);
+    background-color: rgba(255, 255, 255, 0.07);
+}
+
+.token-item:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Token类型颜色 */
+.token-type-word {
+    background-color: rgba(59, 130, 246, 0.15);
+    border-bottom: 1px solid rgba(59, 130, 246, 0.4);
+}
+
+.token-type-special {
+    background-color: rgba(147, 51, 234, 0.15);
+    border-bottom: 1px solid rgba(147, 51, 234, 0.4);
+}
+
+.token-type-punctuation {
+    background-color: rgba(16, 185, 129, 0.15);
+    border-bottom: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.token-type-number {
+    background-color: rgba(245, 158, 11, 0.15);
+    border-bottom: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.token-type-whitespace {
+    background-color: rgba(236, 72, 153, 0.15);
+    border-bottom: 1px solid rgba(236, 72, 153, 0.4);
+}
+
+/* Token ID表格 */
+.token-id-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.token-id-table th,
+.token-id-table td {
+    padding: var(--space-sm);
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+}
+
+.token-id-table th {
+    font-weight: 600;
+    color: var(--text-secondary);
+    background-color: var(--bg-card);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.token-id-table tr:hover {
+    background-color: var(--bg-hover);
+}
+
+/* 空状态 */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-xl) 0;
+    color: var(--text-tertiary);
+    text-align: center;
+}
+
+.empty-state svg {
+    margin-bottom: var(--space-md);
+    opacity: 0.6;
+}
+
+/* 加载状态 */
+.loading-overlay {
+    position: absolute;
+    inset: 0;
+    background-color: rgba(10, 10, 10, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+    backdrop-filter: blur(4px);
+    border-radius: var(--radius-lg);
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    border-top-color: var(--accent);
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* 页脚 */
+.app-footer {
+    padding: var(--space-md);
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-tertiary);
+    border-top: 1px solid var(--border);
+}
+
+/* 轻主题 */
+body.light-theme {
+    --bg-main: #f5f5f7;
+    --bg-card: #ffffff;
+    --bg-input: #f0f0f5;
+    --bg-hover: #e5e5eb;
+    --border: #e0e0e5;
+    --text-primary: rgba(0, 0, 0, 0.9);
+    --text-secondary: rgba(0, 0, 0, 0.65);
+    --text-tertiary: rgba(0, 0, 0, 0.45);
+}
+
+/* 响应式设计 */
+@media (max-width: 992px) {
+    .content-layout {
+        grid-template-columns: 1fr;
+        gap: var(--space-md);
+    }
+
+    .app-header {
+        padding: 0;
+    }
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-input);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: var(--border);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: var(--text-tertiary);
+}
