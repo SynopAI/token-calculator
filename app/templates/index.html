@@ -50,7 +50,8 @@
                                 <div class="select-container">
                                     <select id="modelSelect">
                                         {% for model_id, model_name in models.items() %}
-                                        <option value="{{ model_id }}">{{ model_name }}</option>
+                                        <option value="{{ model_id }}" {% if model_id=='gpt-4o' %}selected{% endif %}>{{
+                                            model_name }}</option>
                                         {% endfor %}
                                     </select>
                                     <div class="select-arrow"></div>
@@ -59,7 +60,7 @@
 
                             <div class="form-group">
                                 <label for="outputTokens">预估输出Token数</label>
-                                <input type="number" id="outputTokens" value="800" class="form-input">
+                                <input type="number" id="outputTokens" value="0" class="form-input">
                             </div>
 
                             <div class="form-actions">

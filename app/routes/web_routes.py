@@ -12,7 +12,8 @@ def index():
         'index.html', 
         models=models,
         pricing=pricing,
-        default_exchange_rate=Config.DEFAULT_EXCHANGE_RATE
+        default_exchange_rate=Config.DEFAULT_EXCHANGE_RATE,
+        default_model=Config.DEFAULT_MODEL
     )
 
 @web.route('/api-docs')

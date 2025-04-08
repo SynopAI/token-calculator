@@ -10,6 +10,9 @@ except:
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'hard-to-guess-string'
     
+    # 默认模型
+    DEFAULT_MODEL = 'gpt-4o'
+    
     # Token算法配置
     AVAILABLE_MODELS = {
         'gpt-3.5-turbo': {'name': 'GPT-3.5 Turbo', 'tokenizer': 'tiktoken', 'encoding': 'cl100k_base'},

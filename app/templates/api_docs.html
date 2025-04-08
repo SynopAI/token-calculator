@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>API文档 - LLM Token计算器</title>
-    <link rel="stylesheet" href="/app/static/css/styles.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 
 <body>
@@ -14,7 +14,15 @@
             <div class="header-content">
                 <h1>LLM Token计算器 API文档</h1>
                 <div class="header-actions">
-                    <a href="{{ url_for('index') }}" class="header-link">返回首页</a>
+                    <a href="{{ url_for('web.index') }}" class="header-link">返回首页</a>
+                    <button id="theme-toggle" class="icon-button">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M12 18C15.3137 18 18 15.3137 18 12C18 8.68629 15.3137 6 12 6C8.68629 6 6 8.68629 6 12C6 15.3137 8.68629 18 12 18Z"
+                                fill="currentColor" />
+                        </svg>
+                    </button>
                 </div>
             </div>
         </header>
@@ -22,8 +30,151 @@
         <main class="app-content">
             <div class="content-wrapper" style="grid-template-columns: 1fr;">
                 <div class="glass-panel">
-                    <h2>API使用指南</h2>
-                    <p>本文档介绍如何使用LLM Token计算器API。</p>
+                    <h2>API 使用指南</h2>
+                    <p>本文档介绍如何使用 LLM Token 计算器 API。</p>
+                    
+                    <div class="api-section">
+                        <h3>获取可用模型</h3>
+                        <div class="endpoint">
+                            <span class="http-method">GET</span>
+                            <span class="endpoint-url">/api/models</span>
+                        </div>
+                        <p>获取可用的语言模型列表和价格信息。</p>
+                        
+                        <h4>响应示例</h4>
+                        <pre class="code-block">
+{
+  "models": {
+    "gpt-3.5-turbo": "GPT-3.5 Turbo",
+    "gpt-4": "GPT-4",
+    "claude-2": "Claude 2",
+    "llama-2": "Llama 2"
+  },
+  "pricing": {
+    "gpt-3.5-turbo": {"input": 0.0015, "output": 0.002},
+    "gpt-4": {"input": 0.03, "output": 0.06},
+    "claude-2": {"input": 0.008, "output": 0.024},
+    "llama-2": {"input": 0.0007, "output": 0.0007}
+  }
+}
+</pre>
+                    </div>
+                    
+                    <div class="api-section">
+                        <h3>计算 Token 数量和成本</h3>
+                        <div class="endpoint">
+                            <span class="http-method">POST</span>
+                            <span class="endpoint-url">/api/calculate</span>
+                        </div>
+                        <p>计算给定文本的 token 数量并估算使用成本。</p>
+                        
+                        <h4>请求参数</h4>
+                        <div class="params">
+                            <div class="param-row">
+                                <span class="param-name">text</span>
+                                <span class="param-type">string</span>
+                                <span class="param-desc">要计算的文本内容</span>
+                                <span class="param-required">必填</span>
+                            </div>
+                            <div class="param-row">
+                                <span class="param-name">model</span>
+                                <span class="param-type">string</span>
+                                <span class="param-desc">语言模型ID</span>
+                                <span class="param-required">必填</span>
+                            </div>
+                            <div class="param-row">
+                                <span class="param-name">output_tokens</span>
+                                <span class="param-type">integer</span>
+                                <span class="param-desc">预估输出token数</span>
+                                <span class="param-required">可选</span>
+                            </div>
+                            <div class="param-row">
+                                <span class="param-name">exchange_rate</span>
+                                <span class="param-type">number</span>
+                                <span class="param-desc">USD 兑换成 CNY 的汇率</span>
+                                <span class="param-required">可选</span>
+                            </div>
+                        </div>
+                        
+                        <h4>请求示例</h4>
+                        <pre class="code-block">
+{
+  "text": "这是一段需要计算token的文本",
+  "model": "gpt-3.5-turbo",
+  "output_tokens": 800,
+  "exchange_rate": 7.2
+}
+</pre>
+                        
+                        <h4>响应示例</h4>
+                        <pre class="code-block">
+{
+  "success": true,
+  "input_tokens": 12,
+  "tokens_detail": [
+    {"id": 0, "token": 25, "text": "这", "bytes": "e8 bf 99"},
+    {"id": 1, "token": 417, "text": "是", "bytes": "e6 98 af"},
+    // ... 更多token详情
+  ],
+  "cost_estimate": {
+    "input_tokens": 12,
+    "output_tokens": 800,
+    "input_cost_usd": 0.000018,
+    "output_cost_usd": 0.0016,
+    "total_cost_usd": 0.001618,
+    "total_cost_cny": 0.0116496,
+    "exchange_rate": 7.2
+  }
+}
+</pre>
+                    </div>
+                    
+                    <div class="api-section">
+                        <h3>使用示例</h3>
+                        <h4>使用 JavaScript 调用 API</h4>
+                        <pre class="code-block">
+const calculateTokens = async () => {
+  try {
+    const response = await fetch('/api/calculate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        text: "这是一段测试文本",
+        model: "gpt-3.5-turbo",
+        output_tokens: 500
+      })
+    });
+    
+    const data = await response.json();
+    console.log("Token计算结果:", data);
+  } catch (error) {
+    console.error("API调用出错:", error);
+  }
+};
+
+calculateTokens();
+</pre>
+                        
+                        <h4>使用 Python 调用 API</h4>
+                        <pre class="code-block">
+import requests
+import json
+
+url = "http://localhost:5000/api/calculate"
+payload = {
+    "text": "这是一段测试文本",
+    "model": "gpt-3.5-turbo",
+    "output_tokens": 500
+}
+
+response = requests.post(url, json=payload)
+result = response.json()
+
+print("Token计算结果:", json.dumps(result, indent=2, ensure_ascii=False))
+</pre>
+                    </div>
                 </div>
             </div>
         </main>
@@ -34,6 +185,35 @@
             </div>
         </footer>
     </div>
+
+    <script>
+        // 主题切换
+        document.getElementById('theme-toggle').addEventListener('click', function() {
+            document.body.classList.toggle('light-theme');
+            
+            const root = document.documentElement;
+            
+            if (document.body.classList.contains('light-theme')) {
+                // 切换到浅色主题
+                root.style.setProperty('--background', '#f2f2f7');
+                root.style.setProperty('--surface', 'rgba(240, 240, 247, 0.8)');
+                root.style.setProperty('--surface-hover', 'rgba(220, 220, 230, 0.8)');
+                root.style.setProperty('--border', 'rgba(200, 200, 200, 0.8)');
+                root.style.setProperty('--text-primary', 'rgba(0, 0, 0, 0.9)');
+                root.style.setProperty('--text-secondary', 'rgba(0, 0, 0, 0.65)');
+                root.style.setProperty('--text-tertiary', 'rgba(0, 0, 0, 0.45)');
+            } else {
+                // 切换回暗色主题
+                root.style.setProperty('--background', '#0a0a0a');
+                root.style.setProperty('--surface', 'rgba(40, 40, 40, 0.6)');
+                root.style.setProperty('--surface-hover', 'rgba(60, 60, 60, 0.8)');
+                root.style.setProperty('--border', 'rgba(80, 80, 80, 0.6)');
+                root.style.setProperty('--text-primary', 'rgba(255, 255, 255, 0.9)');
+                root.style.setProperty('--text-secondary', 'rgba(255, 255, 255, 0.65)');
+                root.style.setProperty('--text-tertiary', 'rgba(255, 255, 255, 0.45)');
+            }
+        });
+    </script>
 </body>
 
 </html>

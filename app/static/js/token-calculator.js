@@ -1,6 +1,8 @@
 $(document).ready(function () {
     // 初始化变量
     let modelPricing = {};
+    // 获取默认模型，如果URL中有指定则使用URL中的值，否则使用预先选择的值
+    let defaultModel = 'gpt-4o'; // 设置默认模型
     let currentModel = $('#modelSelect').val();
     let currentView = 'text'; // 默认视图模式: 'text' 或 'ids'
 
@@ -26,23 +28,53 @@ $(document).ready(function () {
         modelPricing = data.pricing;
         // 更新模型选择下拉框
         const modelSelect = $('#modelSelect');
+
+        // 保存当前选择的值，如果没有则使用默认模型
+        const currentSelectedModel = modelSelect.val() || defaultModel;
+
         modelSelect.empty();
-        Object.keys(modelPricing).forEach(modelId => {
-            modelSelect.append($('<option>', {
+        Object.keys(data.models).forEach(modelId => {
+            const option = $('<option>', {
                 value: modelId,
-                text: data.models[modelId].name || modelId
-            }));
+                text: data.models[modelId] || modelId
+            });
+
+            // 如果是默认模型，设置为选中
+            if (modelId === defaultModel) {
+                option.prop('selected', true);
+            }
+
+            modelSelect.append(option);
         });
-        // 触发change事件以更新价格
-        modelSelect.trigger('change');
+
+        // 如果之前有选中的模型且存在于新列表中，则恢复该选择
+        if (data.models[currentSelectedModel]) {
+            modelSelect.val(currentSelectedModel);
+        }
+
+        // 更新当前模型变量
+        currentModel = modelSelect.val();
+
+        // 更新价格输入
+        updatePriceInputs();
+
+        // 初始计算（如果文本框有内容）
+        if ($('#textInput').val().trim() !== '') {
+            calculateTokens();
+        }
     }).fail(function () {
         // 如果API调用失败，使用默认值
         modelPricing = {
-            'gpt-3.5-turbo': { input: 0.0015, output: 0.002 },
+            'gpt-4o': { input: 0.01, output: 0.03 },
             'gpt-4': { input: 0.03, output: 0.06 },
+            'gpt-3.5-turbo': { input: 0.0015, output: 0.002 },
             'claude-2': { input: 0.008, output: 0.024 },
             'llama-2': { input: 0.0007, output: 0.0007 }
         };
+
+        // 设置默认模型选择
+        $('#modelSelect').val(defaultModel);
+
         updatePriceInputs();
     });
 
@@ -105,20 +137,17 @@ $(document).ready(function () {
     function calculateTokens() {
         const text = $('#textInput').val();
         if (!text || text.trim() === '') {
-            // 修改这一行，替换弹窗提示
-            // showNotification('请输入文本', 'error');
             $('#resultLoading').hide();
             $('#emptyState').show();
+            $('#resultData').hide();
             return;
         }
 
         const model = currentModel;
         const outputTokens = parseInt($('#outputTokens').val()) || 0;
         const exchangeRate = parseFloat($('#exchangeRate').val()) || 7.2;
-        const customPricing = {
-            input: parseFloat($('#inputPrice').val()),
-            output: parseFloat($('#outputPrice').val())
-        };
+        const inputPrice = parseFloat($('#inputPrice').val()) || modelPricing[model].input;
+        const outputPrice = parseFloat($('#outputPrice').val()) || modelPricing[model].output;
 
         // 显示加载状态
         $('#resultLoading').show();
@@ -135,16 +164,19 @@ $(document).ready(function () {
                 model: model,
                 output_tokens: outputTokens,
                 exchange_rate: exchangeRate,
-                custom_pricing: customPricing
+                custom_pricing: {
+                    input: inputPrice,
+                    output: outputPrice
+                }
             }),
             success: function (response) {
                 displayResults(response);
             },
             error: function (error) {
                 console.error('计算出错:', error);
-                showNotification('计算出错: ' + (error.responseJSON?.error || '未知错误'), 'error');
                 $('#resultLoading').hide();
                 $('#emptyState').show();
+                $('#emptyState').find('p').text('计算出错: ' + (error.responseJSON?.error || '未知错误'));
             }
         });
     }

@@ -13,17 +13,53 @@
 ## 3. 项目结构
 
 ```txt
-.
-├── app.py              # 主应用入口
-├── app/                # 应用核心目录
-│   ├── static/         # 静态资源
-│   ├── templates/      # 模板文件
-│   ├── tokenizers/     # 分词器实现
-│   └── utils/          # 工具类
-├── docs/              # 文档
-├── static/            # 全局静态资源
-├── templates/         # 全局模板
-└── tests/             # 测试用例
+./token-calculator
+├── app
+│   ├── __pycache__
+│   │   ├── __init__.cpython-312.pyc
+│   │   └── config.cpython-312.pyc
+│   ├── routes
+│   │   ├── __pycache__
+│   │   │   ├── __init__.cpython-312.pyc
+│   │   │   ├── api_routes.cpython-312.pyc
+│   │   │   └── web_routes.cpython-312.pyc
+│   │   ├── __init__.py
+│   │   ├── api_routes.py
+│   │   └── web_routes.py
+│   ├── static
+│   │   ├── css
+│   │   │   └── styles.css
+│   │   └── js
+│   │       └── token-calculator.js
+│   ├── templates
+│   │   ├── components
+│   │   ├── api_docs.html
+│   │   ├── base.html
+│   │   └── index.html
+│   ├── tokenizers
+│   │   ├── __init__.py
+│   │   ├── claude_tokenizer.py
+│   │   ├── gpt_tokenizer.py
+│   │   └── llama_tokenizer.py
+│   ├── utils
+│   │   ├── __init__.py
+│   │   ├── cost_estimator.py
+│   │   └── token_calculator.py
+│   ├── __init__.py
+│   └── config.py
+├── docs
+│   ├── PRODUCT.md
+│   └── TECHNICAL.md
+├── tests
+│   ├── __init__.py
+│   ├── test_cost_estimator.py
+│   └── test_tokenizers.py
+├── Dockerfile
+├── README.md
+├── app.py
+├── docker-compose.yml
+├── pyproject.toml
+└── requirements.txt
 ```
 
 ## 4. 核心功能实现
