@@ -104,14 +104,3 @@ npm run build
 
 - GitHub Issues: [https://github.com/SynopAI/token-calculator/issues](https://github.com/SynopAI/token-calculator/issues)
 - Email: [snychng@gmail.com](mailto:snychng@gmail.com)
-
----
-
-**LLM Token计算器** - 让大语言模型的成本计算更简单、更透明！
-
-您可以通过以下命令将这些文档保存到项目的 `docs` 目录中：
-
-```bash
-mkdir -p docs
-# 使用编辑器创建这三个文件，将上面的内容分别粘贴进去
-```
