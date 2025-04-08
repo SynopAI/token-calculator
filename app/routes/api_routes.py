@@ -6,13 +6,29 @@ api = Blueprint('api', __name__)
 def count_tokens(text, model="gpt-3.5-turbo"):
     """准确的token计算函数"""
     try:
-        encoding = tiktoken.encoding_for_model(model)
+        model_config = Config.AVAILABLE_MODELS.get(model, {})
+        encoding_name = model_config.get('encoding', None)
+        
+        if not encoding_name:
+            raise ValueError(f"模型{model}未配置编码方案")
+            
+        encoding = tiktoken.get_encoding(encoding_name)
+        print(f"正在使用编码方案: {encoding.name}")
         tokens = encoding.encode(text)
-        return len(tokens), tokens
+        return len(tokens), tokens, encoding.name
     except Exception as e:
         print(f"Tiktoken错误: {e}")
-        # 如果tiktoken出错，使用简单的空格分词作为后备（不应该走到这里）
-        return len(text.split()), None
+        return len(text.split()), None, 'fallback'
+
+from app.config import Config
+
+@api.route('/models', methods=['GET'])
+def get_models():
+    """获取可用的模型列表和价格信息"""
+    return jsonify({
+        'models': {k: v['name'] for k, v in Config.AVAILABLE_MODELS.items()},
+        'pricing': Config.MODEL_PRICING
+    })
 
 @api.route('/calculate', methods=['POST'])
 def calculate_tokens():
@@ -48,7 +64,7 @@ def calculate_tokens():
         from app.config import Config
         pricing = Config.MODEL_PRICING.get(model, {'input': 0.0015, 'output': 0.002})
         
-        token_count, tokens = count_tokens(text, model)
+        token_count, tokens, _ = count_tokens(text, model)
         
         # 调试输出
         print(f"输入文本: {text[:50]}... (长度: {len(text)})")
@@ -56,8 +72,16 @@ def calculate_tokens():
         
         # 构建token详情
         tokens_detail = []
+        
+        # 初始化model_config在访问之前
+        model_config = Config.AVAILABLE_MODELS.get(model, {})
+        encoding_name = model_config.get('encoding', None)
+        
+        if not encoding_name:
+            raise ValueError(f"模型{model}未配置编码方案")
+        
         if tokens is not None:
-            encoding = tiktoken.encoding_for_model(model)
+            encoding = tiktoken.get_encoding(encoding_name)
             for i, token in enumerate(tokens):
                 try:
                     token_bytes = encoding.decode_single_token_bytes(token)
@@ -109,11 +133,3 @@ def calculate_tokens():
         print(f"计算token时出错: {e}")
         print(traceback.format_exc())
         return jsonify({'error': str(e)}), 500
-
-@api.route('/models', methods=['GET'])
-def get_models():
-    from app.config import Config
-    return jsonify({
-        'models': {k: v['name'] for k, v in Config.AVAILABLE_MODELS.items()},
-        'pricing': Config.MODEL_PRICING
-    })

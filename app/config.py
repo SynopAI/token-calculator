@@ -14,6 +14,9 @@ class Config:
     AVAILABLE_MODELS = {
         'gpt-3.5-turbo': {'name': 'GPT-3.5 Turbo', 'tokenizer': 'tiktoken', 'encoding': 'cl100k_base'},
         'gpt-4': {'name': 'GPT-4', 'tokenizer': 'tiktoken', 'encoding': 'cl100k_base'},
+        'gpt-4o': {'name': 'GPT-4o', 'tokenizer': 'tiktoken', 'encoding': 'o200k_base'},
+        'gpt-4o-mini': {'name': 'GPT-4o Mini', 'tokenizer': 'tiktoken', 'encoding': 'o200k_base'},
+        'gpt-4-turbo': {'name': 'GPT-4 Turbo', 'tokenizer': 'tiktoken', 'encoding': 'cl100k_base'},
         'claude-2': {'name': 'Claude 2', 'tokenizer': 'claude', 'encoding': 'claude'},
         'llama-2': {'name': 'Llama 2', 'tokenizer': 'llama', 'encoding': 'llama'},
     }
@@ -22,6 +25,9 @@ class Config:
     MODEL_PRICING = {
         'gpt-3.5-turbo': {'input': 0.0015, 'output': 0.002},
         'gpt-4': {'input': 0.03, 'output': 0.06},
+        'gpt-4-turbo': {'input': 0.01, 'output': 0.03},
+        'gpt-4o': {'input': 0.01, 'output': 0.03},
+        'gpt-4o-mini': {'input': 0.01, 'output': 0.03},
         'claude-2': {'input': 0.008, 'output': 0.024},
         'llama-2': {'input': 0.0007, 'output': 0.0007},
     }

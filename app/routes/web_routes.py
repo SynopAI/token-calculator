@@ -5,7 +5,7 @@ web = Blueprint('web', __name__)
 
 @web.route('/')
 def index():
-    models = {k: v['name'] for k, v in Config.AVAILABLE_MODELS.items()}
+    models = {k: Config.AVAILABLE_MODELS[k]['name'] for k in Config.MODEL_PRICING}
     pricing = Config.MODEL_PRICING
     
     return render_template(

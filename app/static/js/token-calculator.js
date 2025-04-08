@@ -24,7 +24,17 @@ $(document).ready(function () {
     // 加载模型数据
     $.getJSON('/api/models', function (data) {
         modelPricing = data.pricing;
-        updatePriceInputs();
+        // 更新模型选择下拉框
+        const modelSelect = $('#modelSelect');
+        modelSelect.empty();
+        Object.keys(modelPricing).forEach(modelId => {
+            modelSelect.append($('<option>', {
+                value: modelId,
+                text: data.models[modelId].name || modelId
+            }));
+        });
+        // 触发change事件以更新价格
+        modelSelect.trigger('change');
     }).fail(function () {
         // 如果API调用失败，使用默认值
         modelPricing = {
@@ -216,8 +226,9 @@ $(document).ready(function () {
                 .addClass('token-item')
                 .addClass(tokenType)
                 .attr('data-token-id', token.id)
+                // In renderTextView function
                 .attr('data-token-value', token.token)
-                .attr('title', `Token: ${token.token}\n类型: ${tokenType.replace('token-type-', '')}\n字节: ${token.bytes}`)
+                .attr('title', `Token: ${token.token}\n类型: ...`)
                 .text(token.text);
 
             container.append(el);
@@ -259,7 +270,7 @@ $(document).ready(function () {
             <div class="detail-row"><span>ID:</span> <strong>${token.id}</strong></div>
             <div class="detail-row"><span>值:</span> <strong>${token.token}</strong></div>
             <div class="detail-row"><span>文本:</span> <strong>"${escapeHtml(token.text)}"</strong></div>
-            <div class="detail-row"><span>字节:</span> <strong>${token.bytes}</strong></div>
+            <div class="detail-row"><span>字节:</span> <strong>${token.bytes || 'N/A'}</strong></div>
         </div>
     `;
 
@@ -383,7 +394,7 @@ $(document).ready(function () {
             root.style.setProperty('--text-tertiary', 'rgba(255, 255, 255, 0.45)');
         }
     });
-    $('#textInput').on('input', function() {
+    $('#textInput').on('input', function () {
         calculateTokens();
     });
 });

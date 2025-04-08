@@ -16,7 +16,7 @@
             <div class="header-content">
                 <h1>LLM Token计算器</h1>
                 <div class="header-actions">
-                    <a href="{{ url_for('api_docs') }}" class="header-link">API文档</a>
+                    <a href="{{ url_for('web.api_docs') }}" class="header-link">API文档</a>
                     <button id="theme-toggle" class="icon-button">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path
@@ -49,10 +49,9 @@
                                 <label for="modelSelect">语言模型</label>
                                 <div class="select-container">
                                     <select id="modelSelect">
-                                        <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                                        <option value="gpt-4">GPT-4</option>
-                                        <option value="claude-2">Claude 2</option>
-                                        <option value="llama-2">Llama 2</option>
+                                        {% for model_id, model_name in models.items() %}
+                                        <option value="{{ model_id }}">{{ model_name }}</option>
+                                        {% endfor %}
                                     </select>
                                     <div class="select-arrow"></div>
                                 </div>
